@@ -90,14 +90,15 @@ class Preprocess():
 if __name__ == '__main__':
     preprocess = Preprocess()
     preprocess.calculate_num_per_kind()
-    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
+    print(device)
     classifier = Classifier(PATH, EXCEL).to(device)
-    epoch = 200
-    batch_size = 40
+    epoch = 1000
+    batch_size = 50
     for i in range(epoch):
         batch, labels = classifier.sample_minibatch(batch_size)
         loss = classifier.train_a_batch(batch, labels)
         print(loss)
-        if i == epoch-1:
+        if i % 50 == 49:
             test_batch, test_label = classifier.sample_minibatch(100)
             print(classifier.evaluate(test_batch, test_label))
