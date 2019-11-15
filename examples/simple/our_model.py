@@ -11,9 +11,7 @@ import numpy as np
 PATH = "/newNAS/Workspaces/DRLGroup/xiangyuliu/images"
 EXCEL = "/newNAS/Workspaces/DRLGroup/xiangyuliu/label.xlsx"
 
-# PATH = "/home/xiangyuliu/mnt/newNAS/Workspaces/DRLGroup/xiangyuliu/images"
-# EXCEL = "/home/xiangyuliu/mnt/newNAS/Workspaces/DRLGroup/xiangyuliu/label.xlsx"
-class Classifier():
+class Classifier(torch.nn.Module):
     def __init__(self, image_base_path, label_path, lr=0.001, from_scrtch=True):
         super(Classifier, self).__init__()
         self.from_scratch = from_scrtch
@@ -52,15 +50,22 @@ class Classifier():
         worksheet = pd.read_excel(self.label_path, sheet_name="Sheet2")
         return worksheet.set_index("path").to_dict()['level']
 
-    def train(self, batch, labels):
-        outputs = self.model.forward(batch)
-        loss = self.criteria(outputs, labels)
+    def forward(self, inputs):
+        return self.model.forward(inputs)
+
+    def train_a_batch(self, batch, labels):
+        batch = batch.to(device)
+        labels = labels.to(device)
+        outputs = self.model.forward(batch.to)
+        loss = self.criteria(outputs, labels.to)
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
         return loss.item()
 
     def evaluate(self, batch, labels):
+        batch = batch.to(device)
+        labels = labels.to(device)
         self.model.eval()
         batch_size = batch.shape[0]
         accuracy = 0
@@ -85,7 +90,8 @@ class Preprocess():
 if __name__ == '__main__':
     preprocess = Preprocess()
     preprocess.calculate_num_per_kind()
-    classifier = Classifier(PATH, EXCEL)
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    classifier = Classifier(PATH, EXCEL).to(device)
     epoch = 20
     batch_size = 10
     for i in range(epoch):
