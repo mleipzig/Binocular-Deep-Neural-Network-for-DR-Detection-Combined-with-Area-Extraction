@@ -56,8 +56,8 @@ class Classifier(torch.nn.Module):
     def train_a_batch(self, batch, labels):
         batch = batch.to(device)
         labels = labels.to(device)
-        outputs = self.model.forward(batch.to)
-        loss = self.criteria(outputs, labels.to)
+        outputs = self.model.forward(batch)
+        loss = self.criteria(outputs, labels)
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
@@ -93,10 +93,10 @@ if __name__ == '__main__':
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     classifier = Classifier(PATH, EXCEL).to(device)
     epoch = 20
-    batch_size = 10
+    batch_size = 40
     for i in range(epoch):
         batch, labels = classifier.sample_minibatch(batch_size)
-        loss = classifier.train(batch, labels)
+        loss = classifier.train_a_batch(batch, labels)
         print(loss)
         if i == epoch-1:
             test_batch, test_label = classifier.sample_minibatch(100)
