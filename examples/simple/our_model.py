@@ -29,7 +29,7 @@ class Classifier(torch.nn.Module):
             for param in self.model.parameters():
                 param.requires_grad = False
             self.model._fc = torch.nn.Linear(efficientnet_pytorch.utils.round_filters(1280, self.model._global_params),
-                                             3)
+                                             5)
 
     def sample_minibatch(self, batch_size):
         image_array = []
