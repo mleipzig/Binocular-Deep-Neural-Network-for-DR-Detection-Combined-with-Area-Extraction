@@ -11,6 +11,7 @@ import numpy as np
 PATH = "/newNAS/Workspaces/DRLGroup/xiangyuliu/images"
 EXCEL = "/newNAS/Workspaces/DRLGroup/xiangyuliu/label.xlsx"
 
+
 class Classifier(torch.nn.Module):
     def __init__(self, image_base_path, label_path, lr=0.001, from_scrtch=True):
         super(Classifier, self).__init__()
@@ -28,8 +29,10 @@ class Classifier(torch.nn.Module):
         if not self.from_scratch:
             for param in self.model.parameters():
                 param.requires_grad = False
-            self.model._fc = torch.nn.Linear(efficientnet_pytorch.utils.round_filters(1280, self.model._global_params),
-                                             3)
+            self._avg_pooling = torch.nn.AdaptiveAvgPool2d(1)
+            self._dropout = torch.nn.Dropout(self._global_params.dropout_rate)
+            out_channels = efficientnet_pytorch.utils.round_filters(1280, self._global_params)
+            self._fc = torch.nn.Linear(out_channels, self._global_params.num_classes)
 
     def sample_minibatch(self, batch_size):
         image_array = []
@@ -51,7 +54,16 @@ class Classifier(torch.nn.Module):
         return worksheet.set_index("path").to_dict()['level']
 
     def forward(self, inputs):
-        return self.model.forward(inputs)
+        """ Calls extract_features to extract features, applies final linear layer, and returns logits. """
+        bs = inputs.size(0)
+        # Convolution layers
+        x = self.model.extract_features(inputs)
+        # Pooling and final linear layer
+        x = self._avg_pooling(x)
+        x = x.view(bs, -1)
+        x = self._dropout(x)
+        x = self._fc(x)
+        return x
 
     def train_a_batch(self, batch, labels):
         batch = batch.to(device)
@@ -71,7 +83,7 @@ class Classifier(torch.nn.Module):
         accuracy = 0
         with torch.no_grad():
             for i in range(batch_size):
-                outputs = self.model(batch[i].view((1,)+ batch[i].shape))
+                outputs = self.model(batch[i].view((1,) + batch[i].shape))
                 print('-----')
                 for idx in torch.topk(outputs, k=1).indices.squeeze(0).tolist():
                     prob = torch.softmax(outputs, dim=1)[0, idx].item()
@@ -80,9 +92,11 @@ class Classifier(torch.nn.Module):
                         accuracy += 1
         return accuracy / batch_size
 
+
 class Preprocess():
     def __init__(self):
         self.label_dict = json.load(open("data_dict.json", "r"))
+
     def calculate_num_per_kind(self):
         return json.load(open("num_per_kind.json", "r"))
 
