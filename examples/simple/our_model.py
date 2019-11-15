@@ -7,8 +7,8 @@ import efficientnet_pytorch
 from efficientnet_pytorch import EfficientNet
 import numpy as np
 
-PATH = "/home/xiangyuliu/Downloads/images"
-EXCEL = "/home/xiangyuliu/Downloads/label.xlsx"
+PATH = "newNAS/Workspaces/DRLGroup/xiangyuliu/images"
+EXCEL = "newNAS/Workspaces/DRLGroup/xiangyuliu/label.xlsx"
 
 
 class Classifier():
