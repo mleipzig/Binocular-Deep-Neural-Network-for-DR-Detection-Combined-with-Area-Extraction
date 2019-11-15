@@ -92,7 +92,7 @@ if __name__ == '__main__':
     preprocess.calculate_num_per_kind()
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     classifier = Classifier(PATH, EXCEL).to(device)
-    epoch = 20
+    epoch = 200
     batch_size = 40
     for i in range(epoch):
         batch, labels = classifier.sample_minibatch(batch_size)
