@@ -27,7 +27,7 @@ class Classifier(torch.nn.Module):
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learing_rate)
         if not self.from_scratch:
             for param in self.model.parameters():
-                param.require_grad = False
+                param.requires_grad = False
             self.model._fc = torch.nn.Linear(efficientnet_pytorch.utils.round_filters(1280, self.model._global_params),
                                              3)
 
