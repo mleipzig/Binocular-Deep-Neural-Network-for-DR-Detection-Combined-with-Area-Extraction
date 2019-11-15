@@ -6,8 +6,8 @@ from torchvision import transforms
 from efficientnet_pytorch import EfficientNet
 from efficientnet_pytorch import utils
 import numpy as np
-PATH = "/home/xiangyuliu/Downloads/images"
-EXCEL = "/home/xiangyuliu/Downloads/label.xlsx"
+PATH = "newNAS/Workspaces/DRLGroup/xiangyuliu/images"
+EXCEL = "newNAS/Workspaces/DRLGroup/xiangyuliu/label.xlsx"
 class Classifier():
     def __init__(self, image_base_path, label_path, lr=0.001, from_scrtch = True):
         super(Classifier, self).__init__()
