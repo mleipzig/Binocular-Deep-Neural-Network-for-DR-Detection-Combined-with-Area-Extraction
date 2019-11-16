@@ -18,7 +18,7 @@ device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
 class Classifier(torch.nn.Module):
     def __init__(self, image_base_path, label_path, args):
         super(Classifier, self).__init__()
-        self.from_scratch = args.from_scrtch
+        self.from_scratch = args.from_scratch
         self.learing_rate = args.lr
         self.image_base_path = image_base_path
         self.label_path = label_path
@@ -111,7 +111,7 @@ class Classifier(torch.nn.Module):
                 output_2 = outputs[0][5:]
                 healthy = torch.argmax(output_2)
                 print('-----')
-                print(" label:", labels[1][i], " predict:", healthy, " prob:", torch.max(torch.softmax(output_2)))
+                print(" label:", labels[1][i].item(), " predict:", healthy.item(), " prob:", torch.max(torch.softmax(output_2, dim=0)).item())
                 if healthy == labels[1][i]:
                     accuracy += 1
         return accuracy / batch_size
