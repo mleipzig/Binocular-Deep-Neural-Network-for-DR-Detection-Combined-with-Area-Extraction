@@ -40,6 +40,7 @@ class Classifier(torch.nn.Module):
     def sample_minibatch(self, batch_size):
         image_array = []
         label_array = []
+        binary_label = []
         raw_image = np.random.choice(list(self.image_label_dict.keys()), size=batch_size + 5)
         for image_path in raw_image:
             image = os.path.splitext(image_path)[0]
@@ -48,23 +49,21 @@ class Classifier(torch.nn.Module):
                 image = self.tfms(Image.open(os.path.join(PATH, image))).unsqueeze(0)
                 image_array.append(image)
                 label_array.append(self.image_label_dict[image_path])
+                binary_label.append(0 if self.image_label_dict[image_path] < 0.5 else 1)
             if len(image_array) == batch_size:
                 break
         minibatch = torch.stack([image_array[i][0] for i in range(len(image_array))], dim=0)
-        label_tensor = torch.tensor(label_array, dtype = torch.float)
-        print(minibatch.requires_grad, label_tensor.requires_grad)
-        return minibatch, label_tensor
+        label_tensor = torch.tensor(label_array, dtype=torch.float)
+        binary_label_tensor = torch.tensor(binary_label, dtype=torch.float)
+        return minibatch, torch.cat(label_tensor, binary_label_tensor)
 
     def load_label_dict(self):
         worksheet = pd.read_excel(self.label_path, sheet_name="Sheet2")
         return worksheet.set_index("path").to_dict()['level']
 
     def forward(self, inputs):
-        """ Calls extract_features to extract features, applies final linear layer, and returns logits. """
         bs = inputs.size(0)
-        # Convolution layers
         x = self.model.extract_features(inputs)
-        # Pooling and final linear layer
         x_1 = self._avg_pooling_1(x)
         x_1 = x_1.view(bs, -1)
         x_1 = self._dropou_1(x_1)
@@ -74,13 +73,25 @@ class Classifier(torch.nn.Module):
         x_2 = x_2.view(bs, -1)
         x_2 = self._dropout_2(x_2)
         x_2 = self._fc_2(x_2)
-        return torch.cat((x_1, x_2), dim = -1)
+        x = torch.cat((x_1, x_2), dim=-1)
+        print(x.shape)
+        return x
 
-    def train_a_batch(self, batch, labels):
+    def train_a_batch_binary(self, batch, labels):
         batch = batch.to(device)
         labels = labels.to(device)
-        outputs = self.model.forward(batch)
-        loss = self.criteria(outputs, labels)
+        outputs = self.forward(batch)
+        loss = self.criteria(outputs[:, 5:], labels[5:])
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+        return loss.item()
+
+    def train_a_batch_four(self, batch, labels):
+        batch = batch.to(device)
+        labels = labels.to(device)
+        outputs = self.forward(batch)
+        loss = self.criteria(outputs[:, 0:5], labels[0:5])
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
@@ -122,7 +133,7 @@ if __name__ == '__main__':
     batch_size = 50
     for i in range(epoch):
         batch, labels = classifier.sample_minibatch(batch_size)
-        loss = classifier.train_a_batch(batch, labels)
+        loss = classifier.train_a_batch_binary(batch, labels)
         print(loss)
         if i % 50 == 49:
             test_batch, test_label = classifier.sample_minibatch(100)
