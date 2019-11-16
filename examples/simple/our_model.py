@@ -148,7 +148,7 @@ def main(args):
             logger.add_scalar("accuracy", test_accuracy, j)
             j += 1
 
-# Todo: data preprocess(add more samples and mormalize) and partition the data set
+# Todo: data preprocess(add more samples and normalize) and partition the data set
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
     parser.add_argument("--lr", default=0.1, type=float)
