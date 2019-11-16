@@ -18,7 +18,7 @@ device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
 class Classifier(torch.nn.Module):
     def __init__(self, image_base_path, label_path, args):
         super(Classifier, self).__init__()
-        self.from_scratch = args.from_scrtch
+        self.from_scratch = args.from_scratch
         self.learing_rate = args.lr
         self.image_base_path = image_base_path
         self.label_path = label_path
@@ -108,10 +108,11 @@ class Classifier(torch.nn.Module):
         with torch.no_grad():
             for i in range(batch_size):
                 outputs = self.model(batch[i].view((1,) + batch[i].shape))
-                output_2 = outputs[0][0:5]
+                output_2 = outputs[0][5:]
+                print(output_2.shape)
                 healthy = torch.argmax(output_2)
                 print('-----')
-                print(" label:", labels[1][i], " predict:", healthy, " prob:", torch.max(torch.softmax(output_2)))
+                print(" label:", labels[1][i], " predict:", healthy, " prob:", torch.max(torch.softmax(output_2, dim=0)))
                 if healthy == labels[1][i]:
                     accuracy += 1
         return accuracy / batch_size
@@ -137,6 +138,7 @@ def main(args):
     for i in range(args.epoch):
         adjust_learning_rate(classifier.optimizer, i, args)
         batch, labels = classifier.sample_minibatch(args.batch_size)
+        classifier.evaluate_binary(batch, labels)
         loss = classifier.train_a_batch_binary(batch, labels)
         print(loss)
         logger.add_scalar("loss", loss, i)
