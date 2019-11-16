@@ -19,9 +19,9 @@ class Classifier(torch.nn.Module):
         self.learing_rate = lr
         self.image_base_path = image_base_path
         self.label_path = label_path
-        self.model = EfficientNet.from_pretrained('efficientnet-b7', num_classes=5)
+        self.model = EfficientNet.from_pretrained('efficientnet-b0', num_classes=5)
         self.image_label_dict = json.load(open("data_dict.json", "r"))
-        self.tfms = transforms.Compose([transforms.Resize(size=(224, 224)), transforms.ToTensor(),
+        self.tfms = transforms.Compose([transforms.Resize(size=(656, 656)), transforms.ToTensor(),
                                         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]), ])
         self.total_sample_num = len(self.image_label_dict.values())
         self.criteria = torch.nn.CrossEntropyLoss()
@@ -53,8 +53,8 @@ class Classifier(torch.nn.Module):
             if len(image_array) == batch_size:
                 break
         minibatch = torch.stack([image_array[i][0] for i in range(len(image_array))], dim=0)
-        label_tensor = torch.tensor(label_array, dtype=torch.float)
-        binary_label_tensor = torch.tensor(binary_label, dtype=torch.float)
+        label_tensor = torch.tensor(label_array, dtype=torch.long)
+        binary_label_tensor = torch.tensor(binary_label, dtype=torch.long)
         return minibatch, torch.cat((label_tensor.view(1, -1), binary_label_tensor.view(1, -1)), dim = 0)
 
     def load_label_dict(self):
@@ -74,7 +74,6 @@ class Classifier(torch.nn.Module):
         x_2 = self._dropout_2(x_2)
         x_2 = self._fc_2(x_2)
         x = torch.cat((x_1, x_2), dim=-1)
-        print(x.shape)
         return x
 
     def train_a_batch_binary(self, batch, labels):
@@ -109,8 +108,8 @@ class Classifier(torch.nn.Module):
                 print('-----')
                 for idx in torch.topk(outputs, k=1).indices.squeeze(0).tolist():
                     prob = torch.softmax(outputs, dim=1)[0, idx].item()
-                    print(idx, labels[i].item(), prob)
-                    if idx == labels[i]:
+                    print(idx, labels[0][i].item(), prob)
+                    if idx == labels[0][i]:
                         accuracy += 1
         return accuracy / batch_size
 
@@ -129,8 +128,8 @@ if __name__ == '__main__':
     device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
     print(device)
     classifier = Classifier(PATH, EXCEL).to(device)
-    epoch = 1000
-    batch_size = 50
+    epoch = 10000
+    batch_size = 25
     for i in range(epoch):
         batch, labels = classifier.sample_minibatch(batch_size)
         loss = classifier.train_a_batch_binary(batch, labels)
