@@ -55,7 +55,7 @@ class Classifier(torch.nn.Module):
         minibatch = torch.stack([image_array[i][0] for i in range(len(image_array))], dim=0)
         label_tensor = torch.tensor(label_array, dtype=torch.float)
         binary_label_tensor = torch.tensor(binary_label, dtype=torch.float)
-        return minibatch, torch.cat((label_tensor, binary_label_tensor))
+        return minibatch, torch.cat((label_tensor.view(1, -1), binary_label_tensor.view(1, -1)), dim = 0)
 
     def load_label_dict(self):
         worksheet = pd.read_excel(self.label_path, sheet_name="Sheet2")
@@ -81,7 +81,7 @@ class Classifier(torch.nn.Module):
         batch = batch.to(device)
         labels = labels.to(device)
         outputs = self.forward(batch)
-        loss = self.criteria(outputs[:, 5:], labels[5:])
+        loss = self.criteria(outputs[:, 5:], labels[1])
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
@@ -91,7 +91,7 @@ class Classifier(torch.nn.Module):
         batch = batch.to(device)
         labels = labels.to(device)
         outputs = self.forward(batch)
-        loss = self.criteria(outputs[:, 0:5], labels[0:5])
+        loss = self.criteria(outputs[:, 0:5], labels[0])
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
