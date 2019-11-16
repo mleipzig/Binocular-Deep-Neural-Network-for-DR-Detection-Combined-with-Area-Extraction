@@ -107,12 +107,11 @@ class Classifier(torch.nn.Module):
         accuracy = 0
         with torch.no_grad():
             for i in range(batch_size):
-                outputs = self.model(batch[i].view((1,) + batch[i].shape))
+                outputs = self.forward(batch[i].view((1,) + batch[i].shape))
                 output_2 = outputs[0][5:]
-                print(output_2.shape)
                 healthy = torch.argmax(output_2)
                 print('-----')
-                print(" label:", labels[1][i], " predict:", healthy, " prob:", torch.max(torch.softmax(output_2, dim=0)))
+                print(" label:", labels[1][i].item(), " predict:", healthy.item(), " prob:", torch.max(torch.softmax(output_2, dim=0)).item())
                 if healthy == labels[1][i]:
                     accuracy += 1
         return accuracy / batch_size
@@ -138,7 +137,6 @@ def main(args):
     for i in range(args.epoch):
         adjust_learning_rate(classifier.optimizer, i, args)
         batch, labels = classifier.sample_minibatch(args.batch_size)
-        classifier.evaluate_binary(batch, labels)
         loss = classifier.train_a_batch_binary(batch, labels)
         print(loss)
         logger.add_scalar("loss", loss, i)
