@@ -18,8 +18,6 @@ device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
 class Classifier(torch.nn.Module):
     def __init__(self, image_base_path, label_path, args):
         super(Classifier, self).__init__()
-        self.from_scratch = args.from_scratch
-        self.learing_rate = args.lr
         self.image_base_path = image_base_path
         self.label_path = label_path
         self.model = EfficientNet.from_pretrained('efficientnet-b0', num_classes=5)
@@ -27,8 +25,6 @@ class Classifier(torch.nn.Module):
         self.tfms = transforms.Compose([transforms.Resize(size=(args.image_size, args.image_size)),
                                         transforms.ToTensor(),])
         self.total_sample_num = len(self.image_label_dict.values())
-        self.criteria = torch.nn.CrossEntropyLoss()
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learing_rate)
         if not self.from_scratch:
             for param in self.model.parameters():
                 param.requires_grad = False
@@ -79,30 +75,10 @@ class Classifier(torch.nn.Module):
         x = torch.cat((x_1, x_2), dim=-1)
         return x
 
-    def train_a_batch_binary(self, batch, labels):
-        batch = batch.to(device)
-        labels = labels.to(device)
-        outputs = self.forward(batch)
-        loss = self.criteria(outputs[:, 5:], labels[1])
-        self.optimizer.zero_grad()
-        loss.backward()
-        self.optimizer.step()
-        return loss.item()
-
-    def train_a_batch_four(self, batch, labels):
-        batch = batch.to(device)
-        labels = labels.to(device)
-        outputs = self.forward(batch)
-        loss = self.criteria(outputs[:, 0:5], labels[0])
-        self.optimizer.zero_grad()
-        loss.backward()
-        self.optimizer.step()
-        return loss.item()
-
     def evaluate_binary(self, batch, labels):
+        self.model.eval()
         batch = batch.to(device)
         labels = labels.to(device)
-        self.model.eval()
         batch_size = batch.shape[0]
         accuracy = 0
         with torch.no_grad():
@@ -116,13 +92,31 @@ class Classifier(torch.nn.Module):
                     accuracy += 1
         return accuracy / batch_size
 
-
-class Preprocess():
-    def __init__(self):
-        self.label_dict = json.load(open("data_dict.json", "r"))
-
-    def calculate_num_per_kind(self):
-        return json.load(open("num_per_kind.json", "r"))
+class Trainer():
+    def __init__(self, model, args):
+        self.from_scratch = args.from_scratch
+        self.learing_rate = args.lr
+        self.model = model
+        self.criteria = torch.nn.CrossEntropyLoss()
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learing_rate)
+    def train_a_batch_binary(self, batch, labels):
+        batch = batch.to(device)
+        labels = labels.to(device)
+        outputs = self.model(batch)
+        loss = self.criteria(outputs[:, 5:], labels[1])
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+        return loss.item()
+    def train_a_batch_four(self, batch, labels):
+        batch = batch.to(device)
+        labels = labels.to(device)
+        outputs = self.model(batch)
+        loss = self.criteria(outputs[:, 0:5], labels[0])
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+        return loss.item()
 
 def adjust_learning_rate(optimizer, epoch, args):
     """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
@@ -132,12 +126,13 @@ def adjust_learning_rate(optimizer, epoch, args):
 
 def main(args):
     classifier = Classifier(PATH, EXCEL, args).to(device)
+    trainer = Trainer(classifier, args)
     logger = SummaryWriter('log')
     j = 0
     for i in range(args.epoch):
-        adjust_learning_rate(classifier.optimizer, i, args)
+        adjust_learning_rate(trainer.optimizer, i, args)
         batch, labels = classifier.sample_minibatch(args.batch_size)
-        loss = classifier.train_a_batch_binary(batch, labels)
+        loss = trainer.train_a_batch_binary(batch, labels)
         print(loss)
         logger.add_scalar("loss", loss, i)
         if i % args.eval_freq == args.eval_freq - 1:
@@ -148,7 +143,7 @@ def main(args):
             logger.add_scalar("accuracy", test_accuracy, j)
             j += 1
 
-# Todo: data preprocess(add more samples and mormalize) and partition the data set
+# Todo: (1)data preprocess(add more samples and normalize) (2)partition the data set (3)multiprocess (4) try gpu version (5) visualize the figure
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
     parser.add_argument("--lr", default=0.1, type=float)
