@@ -24,9 +24,8 @@ class Classifier(torch.nn.Module):
         self.label_path = label_path
         self.model = EfficientNet.from_pretrained('efficientnet-b0', num_classes=5)
         self.image_label_dict = json.load(open("data_dict.json", "r"))
-        self.tfms = transforms.Compose(
-            [transforms.Resize(size=(args.image_size, args.image_size)), transforms.ToTensor(),
-             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]), ])
+        self.tfms = transforms.Compose([transforms.Resize(size=(args.image_size, args.image_size)),
+                                        transforms.ToTensor(),])
         self.total_sample_num = len(self.image_label_dict.values())
         self.criteria = torch.nn.CrossEntropyLoss()
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learing_rate)
@@ -109,11 +108,10 @@ class Classifier(torch.nn.Module):
         with torch.no_grad():
             for i in range(batch_size):
                 outputs = self.model(batch[i].view((1,) + batch[i].shape))
-                output_1 = outputs[0][5:]
                 output_2 = outputs[0][0:5]
                 healthy = torch.argmax(output_2)
                 print('-----')
-                print("label:", labels[1][i], "predict:", healthy)
+                print(" label:", labels[1][i], " predict:", healthy, " prob:", torch.max(torch.softmax(output_2)))
                 if healthy == labels[1][i]:
                     accuracy += 1
         return accuracy / batch_size
@@ -126,12 +124,18 @@ class Preprocess():
     def calculate_num_per_kind(self):
         return json.load(open("num_per_kind.json", "r"))
 
+def adjust_learning_rate(optimizer, epoch, args):
+    """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
+    lr = args.lr * (0.2 ** (epoch // 30))
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = lr
 
 def main(args):
     classifier = Classifier(PATH, EXCEL, args).to(device)
     logger = SummaryWriter('log')
     j = 0
     for i in range(args.epoch):
+        adjust_learning_rate(classifier.optimizer, i, args)
         batch, labels = classifier.sample_minibatch(args.batch_size)
         loss = classifier.train_a_batch_binary(batch, labels)
         print(loss)
@@ -146,7 +150,7 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
-    parser.add_argument("--lr", default=0.0001, type=float)
+    parser.add_argument("--lr", default=0.1, type=float)
     parser.add_argument("--batch_size", default=25, type=int)
     parser.add_argument("--epoch", default=10000, type=int)
     parser.add_argument("--eval_freq", default=50, type=int)
