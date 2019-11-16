@@ -1,4 +1,5 @@
 import json
+import argparse
 import os
 import pandas as pd
 from PIL import Image
@@ -7,22 +8,25 @@ from torchvision import transforms
 import efficientnet_pytorch
 from efficientnet_pytorch import EfficientNet
 import numpy as np
+from tensorboardX import SummaryWriter
 
 PATH = "/newNAS/Workspaces/DRLGroup/xiangyuliu/images"
 EXCEL = "/newNAS/Workspaces/DRLGroup/xiangyuliu/label.xlsx"
+device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
 
 
 class Classifier(torch.nn.Module):
-    def __init__(self, image_base_path, label_path, lr=0.001, from_scrtch=True):
+    def __init__(self, image_base_path, label_path, args):
         super(Classifier, self).__init__()
-        self.from_scratch = from_scrtch
-        self.learing_rate = lr
+        self.from_scratch = args.from_scrtch
+        self.learing_rate = args.lr
         self.image_base_path = image_base_path
         self.label_path = label_path
         self.model = EfficientNet.from_pretrained('efficientnet-b0', num_classes=5)
         self.image_label_dict = json.load(open("data_dict.json", "r"))
-        self.tfms = transforms.Compose([transforms.Resize(size=(656, 656)), transforms.ToTensor(),
-                                        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]), ])
+        self.tfms = transforms.Compose(
+            [transforms.Resize(size=(args.image_size, args.image_size)), transforms.ToTensor(),
+             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]), ])
         self.total_sample_num = len(self.image_label_dict.values())
         self.criteria = torch.nn.CrossEntropyLoss()
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learing_rate)
@@ -55,7 +59,7 @@ class Classifier(torch.nn.Module):
         minibatch = torch.stack([image_array[i][0] for i in range(len(image_array))], dim=0)
         label_tensor = torch.tensor(label_array, dtype=torch.long)
         binary_label_tensor = torch.tensor(binary_label, dtype=torch.long)
-        return minibatch, torch.cat((label_tensor.view(1, -1), binary_label_tensor.view(1, -1)), dim = 0)
+        return minibatch, torch.cat((label_tensor.view(1, -1), binary_label_tensor.view(1, -1)), dim=0)
 
     def load_label_dict(self):
         worksheet = pd.read_excel(self.label_path, sheet_name="Sheet2")
@@ -96,7 +100,7 @@ class Classifier(torch.nn.Module):
         self.optimizer.step()
         return loss.item()
 
-    def evaluate(self, batch, labels):
+    def evaluate_binary(self, batch, labels):
         batch = batch.to(device)
         labels = labels.to(device)
         self.model.eval()
@@ -105,12 +109,13 @@ class Classifier(torch.nn.Module):
         with torch.no_grad():
             for i in range(batch_size):
                 outputs = self.model(batch[i].view((1,) + batch[i].shape))
+                output_1 = outputs[0][5:]
+                output_2 = outputs[0][0:5]
+                healthy = torch.argmax(output_2)
                 print('-----')
-                for idx in torch.topk(outputs, k=1).indices.squeeze(0).tolist():
-                    prob = torch.softmax(outputs, dim=1)[0, idx].item()
-                    print(idx, labels[0][i].item(), prob)
-                    if idx == labels[0][i]:
-                        accuracy += 1
+                print("label:", labels[1][i], "predict:", healthy)
+                if healthy == labels[1][i]:
+                    accuracy += 1
         return accuracy / batch_size
 
 
@@ -122,18 +127,30 @@ class Preprocess():
         return json.load(open("num_per_kind.json", "r"))
 
 
-if __name__ == '__main__':
-    preprocess = Preprocess()
-    preprocess.calculate_num_per_kind()
-    device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
-    print(device)
-    classifier = Classifier(PATH, EXCEL).to(device)
-    epoch = 10000
-    batch_size = 25
-    for i in range(epoch):
-        batch, labels = classifier.sample_minibatch(batch_size)
+def main(args):
+    classifier = Classifier(PATH, EXCEL, args).to(device)
+    logger = SummaryWriter('log')
+    j = 0
+    for i in range(args.epoch):
+        batch, labels = classifier.sample_minibatch(args.batch_size)
         loss = classifier.train_a_batch_binary(batch, labels)
         print(loss)
-        if i % 50 == 49:
+        logger.add_scalar("loss", loss, i)
+        if i % args.eval_freq == args.eval_freq - 1:
             test_batch, test_label = classifier.sample_minibatch(100)
-            print(classifier.evaluate(test_batch, test_label))
+            accuracy = classifier.evaluate_binary(test_batch, test_label)
+            print(accuracy)
+            logger.add_scalar("accuracy", accuracy, j)
+            j += 1
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
+    parser.add_argument("--lr", default=0.0001, type=float)
+    parser.add_argument("--batch_size", default=25, type=int)
+    parser.add_argument("--epoch", default=10000, type=int)
+    parser.add_argument("--eval_freq", default=50, type=int)
+    parser.add_argument("--from_scratch", default=False, action="store_true")
+    parser.add_argument("--image_size", default=656, type=int)
+    args = parser.parse_args()
+    main(args)
