@@ -20,6 +20,8 @@ class Classifier(torch.nn.Module):
         self.image_base_path = image_base_path
         self.label_path = label_path
         self.model = EfficientNet.from_pretrained('efficientnet-b7', num_classes=5)
+        # for param in self.model.parameters():
+        #     print(param)
         self.image_label_dict = json.load(open("data_dict.json", "r"))
         self.tfms = transforms.Compose([transforms.Resize(size=(224, 224)), transforms.ToTensor(),
                                         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]), ])
@@ -47,7 +49,10 @@ class Classifier(torch.nn.Module):
                 label_array.append(self.image_label_dict[image_path])
             if len(image_array) == batch_size:
                 break
-        return torch.stack([image_array[i][0] for i in range(len(image_array))], dim=0), torch.tensor(label_array)
+        minbatch = torch.stack([image_array[i][0] for i in range(len(image_array))], dim=0)
+        label_tensor = torch.tensor(label_array)
+        print(minbatch.requires_grad, label_tensor.requires_grad)
+        return minbatch, label_tensor
 
     def load_label_dict(self):
         worksheet = pd.read_excel(self.label_path, sheet_name="Sheet2")
