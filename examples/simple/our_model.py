@@ -142,12 +142,13 @@ def main(args):
         logger.add_scalar("loss", loss, i)
         if i % args.eval_freq == args.eval_freq - 1:
             test_batch, test_label = classifier.sample_minibatch(100)
-            accuracy = classifier.evaluate_binary(test_batch, test_label)
-            print(accuracy)
-            logger.add_scalar("accuracy", accuracy, j)
+            test_accuracy = classifier.evaluate_binary(test_batch, test_label)
+            train_accuracy = classifier.evaluate_binary(batch, labels)
+            print("test_accuracy:", test_accuracy, " train_accuracy:", train_accuracy)
+            logger.add_scalar("accuracy", test_accuracy, j)
             j += 1
 
-
+# Todo: data preprocess(add more samples and mormalize) and partition the data set
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
     parser.add_argument("--lr", default=0.1, type=float)
