@@ -55,7 +55,7 @@ class Classifier(torch.nn.Module):
         minibatch = torch.stack([image_array[i][0] for i in range(len(image_array))], dim=0)
         label_tensor = torch.tensor(label_array, dtype=torch.float)
         binary_label_tensor = torch.tensor(binary_label, dtype=torch.float)
-        return minibatch, torch.cat(label_tensor, binary_label_tensor)
+        return minibatch, torch.cat((label_tensor, binary_label_tensor))
 
     def load_label_dict(self):
         worksheet = pd.read_excel(self.label_path, sheet_name="Sheet2")
