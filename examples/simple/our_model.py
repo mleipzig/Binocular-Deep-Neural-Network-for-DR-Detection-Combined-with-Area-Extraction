@@ -20,8 +20,6 @@ class Classifier(torch.nn.Module):
         self.image_base_path = image_base_path
         self.label_path = label_path
         self.model = EfficientNet.from_pretrained('efficientnet-b7', num_classes=5)
-        # for param in self.model.parameters():
-        #     print(param)
         self.image_label_dict = json.load(open("data_dict.json", "r"))
         self.tfms = transforms.Compose([transforms.Resize(size=(224, 224)), transforms.ToTensor(),
                                         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]), ])
@@ -31,10 +29,13 @@ class Classifier(torch.nn.Module):
         if not self.from_scratch:
             for param in self.model.parameters():
                 param.requires_grad = False
-            self._avg_pooling = torch.nn.AdaptiveAvgPool2d(1)
-            self._dropout = torch.nn.Dropout(self._global_params.dropout_rate)
-            out_channels = efficientnet_pytorch.utils.round_filters(1280, self._global_params)
-            self._fc = torch.nn.Linear(out_channels, self._global_params.num_classes)
+        out_channels = efficientnet_pytorch.utils.round_filters(1280, self.model._global_params)
+        self._avg_pooling_1 = torch.nn.AdaptiveAvgPool2d(1)
+        self._dropout_1 = torch.nn.Dropout(self.model._global_params.dropout_rate)
+        self._fc_1 = torch.nn.Linear(out_channels, 5)
+        self._avg_pooling_2 = torch.nn.AdaptiveAvgPool2d(1)
+        self._dropout_2 = torch.nn.Dropout(self.model._global_params.dropout_rate)
+        self._fc_2 = torch.nn.Linear(out_channels, 2)
 
     def sample_minibatch(self, batch_size):
         image_array = []
@@ -49,10 +50,10 @@ class Classifier(torch.nn.Module):
                 label_array.append(self.image_label_dict[image_path])
             if len(image_array) == batch_size:
                 break
-        minbatch = torch.stack([image_array[i][0] for i in range(len(image_array))], dim=0)
-        label_tensor = torch.tensor(label_array)
-        print(minbatch.requires_grad, label_tensor.requires_grad)
-        return minbatch, label_tensor
+        minibatch = torch.stack([image_array[i][0] for i in range(len(image_array))], dim=0)
+        label_tensor = torch.tensor(label_array, dtype = torch.float)
+        print(minibatch.requires_grad, label_tensor.requires_grad)
+        return minibatch, label_tensor
 
     def load_label_dict(self):
         worksheet = pd.read_excel(self.label_path, sheet_name="Sheet2")
@@ -64,11 +65,16 @@ class Classifier(torch.nn.Module):
         # Convolution layers
         x = self.model.extract_features(inputs)
         # Pooling and final linear layer
-        x = self._avg_pooling(x)
-        x = x.view(bs, -1)
-        x = self._dropout(x)
-        x = self._fc(x)
-        return x
+        x_1 = self._avg_pooling_1(x)
+        x_1 = x_1.view(bs, -1)
+        x_1 = self._dropou_1(x_1)
+        x_1 = self._fc_1(x_1)
+
+        x_2 = self._avg_pooling_2(x)
+        x_2 = x_2.view(bs, -1)
+        x_2 = self._dropout_2(x_2)
+        x_2 = self._fc_2(x_2)
+        return torch.cat((x_1, x_2), dim = -1)
 
     def train_a_batch(self, batch, labels):
         batch = batch.to(device)
