@@ -107,8 +107,8 @@ class Classifier(torch.nn.Module):
         accuracy = 0
         with torch.no_grad():
             for i in range(batch_size):
-                outputs = self.model(batch[i].view((1,) + batch[i].shape))
-                output_2 = outputs[0][0:5]
+                outputs = self.forward(batch[i].view((1,) + batch[i].shape))
+                output_2 = outputs[0][5:]
                 healthy = torch.argmax(output_2)
                 print('-----')
                 print(" label:", labels[1][i], " predict:", healthy, " prob:", torch.max(torch.softmax(output_2)))
