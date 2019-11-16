@@ -66,7 +66,7 @@ class Classifier(torch.nn.Module):
         x = self.model.extract_features(inputs)
         x_1 = self._avg_pooling_1(x)
         x_1 = x_1.view(bs, -1)
-        x_1 = self._dropou_1(x_1)
+        x_1 = self._dropout_1(x_1)
         x_1 = self._fc_1(x_1)
 
         x_2 = self._avg_pooling_2(x)
