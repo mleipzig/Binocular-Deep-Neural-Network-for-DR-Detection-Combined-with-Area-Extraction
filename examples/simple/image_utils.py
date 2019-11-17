@@ -6,6 +6,9 @@ import pandas as pd
 from PIL import Image
 import json
 
+PATH = "/newNAS/Workspaces/DRLGroup/xiangyuliu/images"
+EXCEL = "/newNAS/Workspaces/DRLGroup/xiangyuliu/label.xlsx"
+
 
 class DataLoader():
     def __init__(self, args, image_base_path, label_path):
@@ -16,7 +19,7 @@ class DataLoader():
         self.tfms = transforms.Compose([transforms.Resize(size=(args.image_size, args.image_size)),
                                         transforms.ToTensor(), ])
 
-    def sample_minibatch(self, batch_size, transform = True):
+    def sample_minibatch(self, batch_size, transform=True):
         image_array = []
         label_array = []
         binary_label = []
@@ -40,14 +43,22 @@ class DataLoader():
         return minibatch, torch.cat((label_tensor.view(1, -1), binary_label_tensor.view(1, -1)), dim=0)
 
     def test_transform(self):
-        test_image, label = self.sample_minibatch(1)
-        transform_image = self.tfms(test_image)
-        test_image = transforms.ToPILImage()(test_image[0])
-        test_image.show()
-        transform_image = transforms.ToPILImage()(transform_image[0])
-        transform_image.show()
+        image_batch, labels= self.sample_minibatch(50)
+        for test_image, label in zip(image_batch, labels[0]):
+            print(label)
+            transform_image = self.tfms(test_image)
 
+            true_image = transforms.ToPILImage()(test_image[0])
+            true_image.show()
+
+            transform_image = transforms.ToPILImage()(transform_image[0])
+            transform_image.show()
 
     def load_label_dict(self):
         worksheet = pd.read_excel(self.label_path, sheet_name="Sheet2")
         return worksheet.set_index("path").to_dict()['level']
+
+
+if __name__ == '__main__':
+    dataset = DataLoader(PATH, EXCEL)
+    dataset.test_transform()
