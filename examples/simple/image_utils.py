@@ -6,8 +6,8 @@ import pandas as pd
 from PIL import Image
 import json
 
-PATH = "/newNAS/Workspaces/DRLGroup/xiangyuliu/images"
-EXCEL = "/newNAS/Workspaces/DRLGroup/xiangyuliu/label.xlsx"
+PATH = "/home/xiangyuliu/Downloads/images"
+EXCEL = "/home/xiangyuliu/Downloads/label.xlsx"
 
 
 class DataLoader():
