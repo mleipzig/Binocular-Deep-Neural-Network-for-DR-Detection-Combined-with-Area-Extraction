@@ -97,18 +97,23 @@ class Trainer():
         self.from_scratch = args.from_scratch
         self.learing_rate = args.lr
         self.model = model
-        self.criteria = torch.nn.CrossEntropyLoss()
+        self.criteria = torch.nn.BCELoss()
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learing_rate)
     def train_a_batch_binary(self, batch, labels):
+        self.model.train()
         batch = batch.to(device)
         labels = labels.to(device)
+        labels = labels[1]
+        ones = torch.sparse.torch.eye(2)
+        labels = ones.index_select(0,labels)
         outputs = self.model(batch)
-        loss = self.criteria(outputs[:, 5:], labels[1])
+        loss = self.criteria(outputs[:, 5:], labels)
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
         return loss.item()
     def train_a_batch_four(self, batch, labels):
+        self.model.train()
         batch = batch.to(device)
         labels = labels.to(device)
         outputs = self.model(batch)
@@ -143,7 +148,7 @@ def main(args):
             logger.add_scalar("accuracy", test_accuracy, j)
             j += 1
 
-# Todo: (1)data preprocess(add more samples and normalize) (2)partition the data set (3)multiprocess (4) try gpu version (5) visualize the figure
+# Todo: (1)data preprocess(add more samples and normalize) (2)partition the data set (3)multiprocess (4) try gpu version (5) visualize the figure (6) change the loss function
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
     parser.add_argument("--lr", default=0.1, type=float)
