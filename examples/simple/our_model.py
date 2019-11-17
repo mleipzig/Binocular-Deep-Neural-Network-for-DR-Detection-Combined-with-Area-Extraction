@@ -12,15 +12,16 @@ from tensorboardX import SummaryWriter
 
 PATH = "/newNAS/Workspaces/DRLGroup/xiangyuliu/images"
 EXCEL = "/newNAS/Workspaces/DRLGroup/xiangyuliu/label.xlsx"
-device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
 class Classifier(torch.nn.Module):
     def __init__(self, image_base_path, label_path, args):
         super(Classifier, self).__init__()
+        self.from_scratch = args.from_scratch
         self.image_base_path = image_base_path
         self.label_path = label_path
-        self.model = EfficientNet.from_pretrained('efficientnet-b0', num_classes=5)
+        self.model = EfficientNet.from_pretrained('efficientnet-b3', num_classes=5)
         self.image_label_dict = json.load(open("data_dict.json", "r"))
         self.tfms = transforms.Compose([transforms.Resize(size=(args.image_size, args.image_size)),
                                         transforms.ToTensor(),])
@@ -75,39 +76,18 @@ class Classifier(torch.nn.Module):
         x = torch.cat((x_1, x_2), dim=-1)
         return x
 
-    def evaluate_binary(self, batch, labels):
-        self.model.eval()
-        batch = batch.to(device)
-        labels = labels.to(device)
-        batch_size = batch.shape[0]
-        accuracy = 0
-        with torch.no_grad():
-            for i in range(batch_size):
-                outputs = self.forward(batch[i].view((1,) + batch[i].shape))
-                output_2 = outputs[0][5:]
-                healthy = torch.argmax(output_2)
-                print('-----')
-                print(" label:", labels[1][i].item(), " predict:", healthy.item(), " prob:", torch.max(torch.softmax(output_2, dim=0)).item())
-                if healthy == labels[1][i]:
-                    accuracy += 1
-        return accuracy / batch_size
-
 class Trainer():
     def __init__(self, model, args):
-        self.from_scratch = args.from_scratch
         self.learing_rate = args.lr
         self.model = model
-        self.criteria = torch.nn.BCELoss()
+        self.criteria = torch.nn.CrossEntropyLoss()
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learing_rate)
     def train_a_batch_binary(self, batch, labels):
         self.model.train()
         batch = batch.to(device)
         labels = labels.to(device)
-        labels = labels[1]
-        ones = torch.sparse.torch.eye(2)
-        labels = ones.index_select(0,labels)
         outputs = self.model(batch)
-        loss = self.criteria(outputs[:, 5:], labels)
+        loss = self.criteria(outputs[:, 5:], labels[1])
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
@@ -122,17 +102,35 @@ class Trainer():
         loss.backward()
         self.optimizer.step()
         return loss.item()
+    def evaluate_binary(self, batch, labels):
+        self.model.eval()
+        batch = batch.to(device)
+        labels = labels.to(device)
+        batch_size = batch.shape[0]
+        accuracy = 0
+        with torch.no_grad():
+            for i in range(batch_size):
+                outputs = self.model(batch[i].view((1,) + batch[i].shape))
+                output_2 = outputs[0][5:]
+                healthy = torch.argmax(output_2)
+                print('-----')
+                print(" label:", labels[1][i].item(), " predict:", healthy.item(), " prob:", torch.max(torch.softmax(output_2, dim=0)).item())
+                if healthy == labels[1][i]:
+                    accuracy += 1
+        return accuracy / batch_size
 
 def adjust_learning_rate(optimizer, epoch, args):
     """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
     lr = args.lr * (0.2 ** (epoch // 30))
+    if lr <= 1e-5:
+        lr = 1e-5
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
 def main(args):
     classifier = Classifier(PATH, EXCEL, args).to(device)
     trainer = Trainer(classifier, args)
-    logger = SummaryWriter('log')
+    logger = SummaryWriter('log:'+str(args.batch_size)+ "--" + str(args.image_size))
     j = 0
     for i in range(args.epoch):
         adjust_learning_rate(trainer.optimizer, i, args)
@@ -142,20 +140,23 @@ def main(args):
         logger.add_scalar("loss", loss, i)
         if i % args.eval_freq == args.eval_freq - 1:
             test_batch, test_label = classifier.sample_minibatch(100)
-            test_accuracy = classifier.evaluate_binary(test_batch, test_label)
-            train_accuracy = classifier.evaluate_binary(batch, labels)
+            print("----test accuracy")
+            test_accuracy = trainer.evaluate_binary(test_batch, test_label)
+            print("----train accuracy")
+            train_accuracy = trainer.evaluate_binary(batch, labels)
             print("test_accuracy:", test_accuracy, " train_accuracy:", train_accuracy)
             logger.add_scalar("accuracy", test_accuracy, j)
             j += 1
 
-# Todo: (1)data preprocess(add more samples and normalize) (2)partition the data set (3)multiprocess (4) try gpu version (5) visualize the figure (6) change the loss function
+# Todo: (1)data preprocess(add more samples and normalize) (2)partition the data set (3)multiprocess (4) try gpu version (5) visualize the figure
+# Todo: modify the batchsize
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
     parser.add_argument("--lr", default=0.1, type=float)
-    parser.add_argument("--batch_size", default=25, type=int)
+    parser.add_argument("--batch_size", default=48, type=int)
     parser.add_argument("--epoch", default=10000, type=int)
     parser.add_argument("--eval_freq", default=50, type=int)
-    parser.add_argument("--from_scratch", default=False, action="store_true")
-    parser.add_argument("--image_size", default=656, type=int)
+    parser.add_argument("--from_scratch", default=True, action="store_false")
+    parser.add_argument("--image_size", default=300, type=int)
     args = parser.parse_args()
     main(args)
