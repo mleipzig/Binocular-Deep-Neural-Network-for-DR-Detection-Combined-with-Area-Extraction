@@ -11,12 +11,12 @@ EXCEL = "/newNAS/Workspaces/DRLGroup/xiangyuliu/label.xlsx"
 
 
 class DataLoader():
-    def __init__(self, args, image_base_path, label_path):
+    def __init__(self, image_size, image_base_path, label_path):
         self.image_base_path = image_base_path
         self.label_path = label_path
         self.image_label_dict = json.load(open("data_dict.json", "r"))
         self.total_sample_num = len(self.image_label_dict.values())
-        self.tfms = transforms.Compose([transforms.Resize(size=(args.image_size, args.image_size)),
+        self.tfms = transforms.Compose([transforms.Resize(size=(image_size, image_size)),
                                         transforms.ToTensor(), ])
 
     def sample_minibatch(self, batch_size, transform=True):
@@ -60,5 +60,5 @@ class DataLoader():
 
 
 if __name__ == '__main__':
-    dataset = DataLoader(PATH, EXCEL)
+    dataset = DataLoader(PATH, EXCEL, 224)
     dataset.test_transform()
