@@ -35,11 +35,7 @@ def modify_labels(labels):
 def main(args):
     classifier = Classifier(args).to(device)
     trainer = Trainer(classifier, args)
-<<<<<<< Updated upstream
     train_data = CustomDataset(path_list, img_size=args.image_size)
-=======
-    train_data = CustomDataset(path_list)
->>>>>>> Stashed changes
     train_loader = torch.utils.data.DataLoader(dataset=train_data, batch_size=args.batch_size, shuffle=True)
     logger = SummaryWriter('log:' + str(args.batch_size) + "--" + str(args.image_size))
     iter = 0
