@@ -18,7 +18,7 @@ class Trainer():
         self.optimizer.step()
         return loss.item()
 
-    def train_a_batch_four(self, batch, labels):
+    def train_a_batch_five(self, batch, labels):
         self.model.train()
         batch = batch.to(device)
         labels = labels.to(device)
