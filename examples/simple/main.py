@@ -15,6 +15,7 @@ path_list = ["/newNAS/Workspaces/DRLGroup/xiangyuliu/clahe/x_0_clahe.npy",
              "/newNAS/Workspaces/DRLGroup/xiangyuliu/clahe/x_3_clahe.npy",
              "/newNAS/Workspaces/DRLGroup/xiangyuliu/clahe/x_4_clahe.npy"]
 
+
 def adjust_learning_rate(optimizer, epoch, args):
     lr = args.lr * (0.2 ** (epoch // 30))
     if lr <= 1e-4:
@@ -39,18 +40,25 @@ def main(args):
     train_loader = torch.utils.data.DataLoader(dataset=train_data, batch_size=args.batch_size, shuffle=True)
     logger = SummaryWriter('log:' + str(args.batch_size) + "--" + str(args.image_size))
     iter = 0
+    j = 0
     for i in range(args.epoch):
+        # the batch and labels are all tensors
         for image_batch, labels in train_loader:
             adjust_learning_rate(trainer.optimizer, iter, args)
             labels = modify_labels(labels)
             # we need the label of shape (?, 2)
             loss = trainer.train_a_batch_binary(image_batch, labels)
             print(loss)
-            logger.add_scalar("loss", loss, i)
+            logger.add_scalar("train_loss", loss, i)
             if iter % args.eval_freq == args.eval_freq - 1 or iter == 0:
-                print("----test train results")
-                train_accuracy = trainer.evaluate_binary(image_batch, labels)
-                print("train_accuracy:", train_accuracy)
+                print("----test results")
+                test_accuracy, test_loss = trainer.evaluate_binary(train_data.test_batch, train_data.test_label)
+                print("----train results")
+                train_accuracy, train_loss = trainer.evaluate_binary(image_batch, labels)
+                logger.add_scalar("test_loss", test_loss, j)
+                print("train accuracy:", train_accuracy, " test accuracy:", test_accuracy)
+                print("train loss:", train_loss, " test loss:", test_loss)
+                j += 1
             iter += 1
 
 
