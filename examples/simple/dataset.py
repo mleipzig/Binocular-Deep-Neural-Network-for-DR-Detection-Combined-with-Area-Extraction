@@ -73,7 +73,7 @@ class CustomDataset(torch.utils.data.Dataset):
             self.data[i] = np.uint8(self.data[i])
         whole_dataset = np.concatenate(tuple(self.data), axis=0)
         for i in range(3):
-            print(np.mean(whole_dataset[:, :, :, i]), np.std(whole_dataset[:, :, :, i]))
+            print(np.mean(whole_dataset[:, :, :, i])/255, np.std(whole_dataset[:, :, :, i])/(255**2))
 
 
 
