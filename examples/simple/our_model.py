@@ -7,7 +7,7 @@ class Classifier(torch.nn.Module):
     def __init__(self, args):
         super(Classifier, self).__init__()
         self.from_scratch = args.from_scratch
-        self.model = EfficientNet.from_pretrained('efficientnet-b3', num_classes=5)
+        self.model = EfficientNet.from_pretrained('efficientnet-b'+str(args.model_scale), num_classes=5)
         if not self.from_scratch:
             for param in self.model.parameters():
                 param.requires_grad = False

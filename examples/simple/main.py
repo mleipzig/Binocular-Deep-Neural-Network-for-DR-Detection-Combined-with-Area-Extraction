@@ -91,5 +91,6 @@ if __name__ == '__main__':
     parser.add_argument("--from_scratch", default=True, action="store_false")
     parser.add_argument("--image_size", default=300, type=int)
     parser.add_argument("--model_type", default="five", type=str)
+    parser.add_argument("--model_scale", default=3, type=int)
     args = parser.parse_args()
     main(args)

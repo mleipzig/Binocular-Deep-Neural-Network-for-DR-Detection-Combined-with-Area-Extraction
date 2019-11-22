@@ -5,10 +5,10 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 class Trainer():
     def __init__(self, model, args):
-        self.learing_rate = args.lr
+        self.learning_rate = args.lr
         self.model = model
         self.criteria = torch.nn.CrossEntropyLoss()
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learing_rate)
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
         self.model_type = args.model_type
     def train(self, batch, labels):
         if self.model_type == "binary":
