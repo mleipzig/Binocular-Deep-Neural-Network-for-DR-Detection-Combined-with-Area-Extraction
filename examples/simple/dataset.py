@@ -68,7 +68,15 @@ class CustomDataset(torch.utils.data.Dataset):
         img = transforms.ToTensor()(img)
         return img
 
+    def calculate_mean_std(self):
+        for i in range(len(self.data)):
+            self.data[i] = np.uint8(self.data[i])
+        whole_dataset = np.concatenate(tuple(self.data), axis=0)
+        for i in range(3):
+            print(np.mean(whole_dataset[:, :, :, i]), np.std(whole_dataset[:, :, :, i]))
+
+
 
 if __name__ == '__main__':
     dataset = CustomDataset(pathlist)
-    print(dataset.__getitem__(0))
+    print(dataset.calculate_mean_std())
