@@ -3,19 +3,22 @@ import torch
 from examples.simple.our_model import Classifier
 from examples.simple.trainer import Trainer
 from tensorboardX import SummaryWriter
-from .dataset import CustomDataset
+from examples.simple.dataset import CustomDataset
 import numpy as np
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 PATH = "/newNAS/Workspaces/DRLGroup/xiangyuliu/images"
 EXCEL = "/newNAS/Workspaces/DRLGroup/xiangyuliu/label.xlsx"
-
+path_list = ["/newNAS/Workspaces/DRLGroup/xiangyuliu/clahe/x_0_clahe.npy",
+             "/newNAS/Workspaces/DRLGroup/xiangyuliu/clahe/x_1_clahe.npy",
+             "/newNAS/Workspaces/DRLGroup/xiangyuliu/clahe/x_2_clahe.npy",
+             "/newNAS/Workspaces/DRLGroup/xiangyuliu/clahe/x_3_clahe.npy",
+             "/newNAS/Workspaces/DRLGroup/xiangyuliu/clahe/x_4_clahe.npy"]
 
 def adjust_learning_rate(optimizer, epoch, args):
-    """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
     lr = args.lr * (0.2 ** (epoch // 30))
-    if lr <= 1e-5:
-        lr = 1e-5
+    if lr <= 1e-4:
+        lr = 1e-4
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
@@ -26,15 +29,14 @@ def modify_labels(labels):
     for i in range(old_label_np.shape[0]):
         new_label_np[i] = 0 if old_label_np[i] < 0.5 else 1
     labels = np.concatenate([old_label_np.reshape(1, -1), new_label_np.reshape(1, -1)], axis=0)
-    return torch.from_numpy(labels)
+    return torch.tensor(labels, dtype=torch.long)
 
 
 def main(args):
-    path_list = []
     classifier = Classifier(args).to(device)
     trainer = Trainer(classifier, args)
-    train_data = CustomDataset(path_list)
-    train_loader = torch.utils.data.DataLoader(dataset=train_data, batch_size=args.batch_size, shuffle=False)
+    train_data = CustomDataset(path_list, img_size=args.image_size)
+    train_loader = torch.utils.data.DataLoader(dataset=train_data, batch_size=args.batch_size, shuffle=True)
     logger = SummaryWriter('log:' + str(args.batch_size) + "--" + str(args.image_size))
     iter = 0
     for i in range(args.epoch):
@@ -45,7 +47,7 @@ def main(args):
             loss = trainer.train_a_batch_binary(image_batch, labels)
             print(loss)
             logger.add_scalar("loss", loss, i)
-            if iter % args.eval_freq == args.eval_freq - 1:
+            if iter % args.eval_freq == args.eval_freq - 1 or iter == 0:
                 print("----test train results")
                 train_accuracy = trainer.evaluate_binary(image_batch, labels)
                 print("train_accuracy:", train_accuracy)

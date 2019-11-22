@@ -11,10 +11,13 @@ class Trainer():
         self.model.train()
         batch = batch.to(device)
         labels = labels.to(device)
+        print("begin infer")
         outputs = self.model(batch)
+        print("begin optimize")
         loss = self.criteria(outputs[:, 5:], labels[1])
         self.optimizer.zero_grad()
         loss.backward()
+        print("end optimize")
         self.optimizer.step()
         return loss.item()
 
