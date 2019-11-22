@@ -9,6 +9,14 @@ class Trainer():
         self.model = model
         self.criteria = torch.nn.CrossEntropyLoss()
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learing_rate)
+        self.model_type = args.model_type
+    def train(self, batch, labels):
+        if self.model_type == "binary":
+            return self.train_a_batch_binary(batch, labels)
+        elif self.model_type == "five":
+            return self.train_a_batch_five(batch, labels)
+        else:
+            print("no such model")
 
     def train_a_batch_five(self, batch, labels):
         self.model.train()
@@ -31,7 +39,13 @@ class Trainer():
         loss.backward()
         self.optimizer.step()
         return loss.item()
-
+    def evaluate(self, batch, labels):
+        if self.model_type == "binary":
+            return self.evaluate_binary(batch, labels)
+        elif self.model_type == "five":
+            return self.evaluate_five(batch, labels)
+        else:
+            print("no such model")
     def evaluate_five(self, batch, labels):
         self.model.eval()
         batch = batch.to(device)

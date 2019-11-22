@@ -27,7 +27,7 @@ class CustomDataset(torch.utils.data.Dataset):
                                             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]), ])
         else:
             self.tfms = transform
-        for path, i in zip(path_list, len(path_list)):
+        for path, i in zip(path_list, range(len(path_list))):
             self.data.append(np.load(path, mmap_mode="r"))
             self.len_array.append(self.data[i].shape[0] - 20)
         for i in range(len(self.len_array)):
@@ -56,13 +56,14 @@ class CustomDataset(torch.utils.data.Dataset):
         image_list = []
         label_list = []
         for label in range(5):
-            for index in np.arange(-20, 0):
+            for index in range(20):
+                index = index - 20
                 image_list.append(self.image_transform(self.data[label][index]))
                 label_list.append(label)
         return torch.stack(image_list, dim=0), torch.tensor(np.array(label_list), dtype=torch.long)
 
     def image_transform(self, img):
-        img = Image.fromarray(img)
+        img = Image.fromarray(np.uint8(img))
         img = transforms.Resize(size=(self.img_size, self.img_size))(img)
         img = transforms.ToTensor()(img)
         return img
