@@ -5,6 +5,8 @@ from examples.simple.trainer import Trainer
 from tensorboardX import SummaryWriter
 from examples.simple.dataset import CustomDataset
 import numpy as np
+from pathlib import Path
+import os
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 PATH = "/newNAS/Workspaces/DRLGroup/xiangyuliu/images"
@@ -38,7 +40,23 @@ def main(args):
     trainer = Trainer(classifier, args)
     train_data = CustomDataset(path_list, img_size=args.image_size)
     train_loader = torch.utils.data.DataLoader(dataset=train_data, batch_size=args.batch_size, shuffle=True)
-    logger = SummaryWriter('log:' + str(args.batch_size) + "--" + str(args.image_size))
+
+    model_dir = Path('./logs') / args.model /str(args.image_size) + "-" + str(args.batch_size)
+    if not model_dir.exists():
+        run_num = 1
+    else:
+        exst_run_nums = [int(str(folder.name).split('run')[1]) for folder in
+                         model_dir.iterdir() if
+                         str(folder.name).startswith('run')]
+        if len(exst_run_nums) == 0:
+            run_num = 1
+        else:
+            run_num = max(exst_run_nums) + 1
+    curr_run = 'run%i' % run_num
+    log_dir = model_dir / curr_run
+    os.makedirs(log_dir)
+    logger = SummaryWriter(str(log_dir))
+
     iter = 0
     j = 0
     for i in range(args.epoch):
@@ -71,5 +89,6 @@ if __name__ == '__main__':
     parser.add_argument("--eval_freq", default=50, type=int)
     parser.add_argument("--from_scratch", default=True, action="store_false")
     parser.add_argument("--image_size", default=300, type=int)
+    parser.add_argument("--model", default="binary", type=str)
     args = parser.parse_args()
     main(args)
