@@ -42,7 +42,7 @@ def main(args):
     train_data.test_label = modify_labels(train_data.test_label)
     train_loader = torch.utils.data.DataLoader(dataset=train_data, batch_size=args.batch_size, shuffle=True, num_workers = 4)
 
-    model_dir = Path('./logs') / args.model_type /(str(args.image_size) + "-" + str(args.batch_size))
+    model_dir = Path('./logs') / args.model_type / str(args.model_scale) / (str(args.image_size) + "-" + str(args.batch_size))
     if not model_dir.exists():
         run_num = 1
     else:
