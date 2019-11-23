@@ -40,9 +40,11 @@ def main(args):
     trainer = Trainer(classifier, args)
     train_data = CustomDataset(path_list, img_size=args.image_size)
     train_data.test_label = modify_labels(train_data.test_label)
-    train_loader = torch.utils.data.DataLoader(dataset=train_data, batch_size=args.batch_size, shuffle=True, num_workers = 4)
+    train_loader = torch.utils.data.DataLoader(dataset=train_data, batch_size=args.batch_size, shuffle=True,
+                                               num_workers=4)
 
-    model_dir = Path('./logs') / args.model_type / str(args.model_scale) / (str(args.image_size) + "-" + str(args.batch_size))
+    model_dir = Path('./logs') / args.model_type / str(args.model_scale) / (
+            str(args.image_size) + "-" + str(args.batch_size))
     if not model_dir.exists():
         run_num = 1
     else:
@@ -80,8 +82,8 @@ def main(args):
                 print("train loss:", train_loss, " test loss:", test_loss)
                 j += 1
             if iter % args.save_freq == 0:
-                print("load model")
-                classifier = torch.load(log_dir/"model.ckpt")
+                print("saving model")
+                classifier.save(log_dir / ("param_%i.pt" % iter))
             iter += 1
 
 
