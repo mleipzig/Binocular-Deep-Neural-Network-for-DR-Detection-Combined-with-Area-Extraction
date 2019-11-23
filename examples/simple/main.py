@@ -36,7 +36,9 @@ def modify_labels(labels):
 
 
 def main(args):
+    save_path = ""
     classifier = Classifier(args).to(device)
+    classifier.load_state_dict(torch.load(save_path))
     trainer = Trainer(classifier, args)
     train_data = CustomDataset(path_list, img_size=args.image_size)
     train_data.test_label = modify_labels(train_data.test_label)
