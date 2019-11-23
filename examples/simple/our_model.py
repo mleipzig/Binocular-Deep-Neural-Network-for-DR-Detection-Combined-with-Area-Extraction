@@ -32,3 +32,6 @@ class Classifier(torch.nn.Module):
         x_2 = self._fc_2(x_2)
         x = torch.cat((x_1, x_2), dim=-1)
         return x
+
+    def save(self, path):
+        torch.save(self.state_dict(), path)
