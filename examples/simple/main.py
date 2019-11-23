@@ -20,8 +20,8 @@ path_list = ["/newNAS/Workspaces/DRLGroup/xiangyuliu/clahe/x_0_clahe.npy",
 
 def adjust_learning_rate(optimizer, epoch, args):
     lr = args.lr * (0.5 ** (epoch // 10))
-    if lr <= 1e-4:
-        lr = 1e-4
+    if lr <= args.final_lr:
+        lr = args.final_lr
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
@@ -46,7 +46,7 @@ def main(args):
                                                num_workers=4)
 
     model_dir = Path('./logs') / args.model_type / str(args.model_scale) / (
-            str(args.image_size) + "-" + str(args.batch_size))
+            str(args.image_size) + "-" + str(args.batch_size) + "-" + str(args.final_lr))
     if not model_dir.exists():
         run_num = 1
     else:
@@ -93,6 +93,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
     parser.add_argument("--lr", default=0.1, type=float)
+    parser.add_argument("--final_lr", default=1e-5, type=float)
     parser.add_argument("--batch_size", default=48, type=int)
     parser.add_argument("--epoch", default=10, type=int)
     parser.add_argument("--eval_freq", default=50, type=int)
