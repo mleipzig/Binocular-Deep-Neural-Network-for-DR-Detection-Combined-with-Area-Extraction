@@ -20,8 +20,8 @@ path_list = ["/newNAS/Workspaces/DRLGroup/xiangyuliu/clahe/x_0_clahe.npy",
 
 def adjust_learning_rate(optimizer, epoch, args):
     lr = args.lr * (0.5 ** (epoch // 10))
-    if lr <= 3e-4:
-        lr = 3e-4
+    if lr <= 1e-4:
+        lr = 1e-4
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
@@ -68,16 +68,20 @@ def main(args):
             # we need the label of shape (?, 2)
             loss = trainer.train(image_batch, labels)
             print(iter, loss)
-            logger.add_scalar("train_loss", loss, i)
+            logger.add_scalar("train_loss", loss, iter)
             if iter % args.eval_freq == args.eval_freq - 1:
                 print("----test results")
                 test_accuracy, test_loss = trainer.evaluate(train_data.test_batch, train_data.test_label)
                 print("----train results")
                 train_accuracy, train_loss = trainer.evaluate(image_batch, labels)
                 logger.add_scalar("test_loss", test_loss, j)
+                logger.add_scalar("test_accuracy", test_accuracy, j)
                 print("train accuracy:", train_accuracy, " test accuracy:", test_accuracy)
                 print("train loss:", train_loss, " test loss:", test_loss)
                 j += 1
+            if iter % args.save_freq == 0:
+                print("load model")
+                classifier = torch.load(log_dir/"model.ckpt")
             iter += 1
 
 
@@ -86,8 +90,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
     parser.add_argument("--lr", default=0.1, type=float)
     parser.add_argument("--batch_size", default=48, type=int)
-    parser.add_argument("--epoch", default=3, type=int)
+    parser.add_argument("--epoch", default=10, type=int)
     parser.add_argument("--eval_freq", default=50, type=int)
+    parser.add_argument("--save_freq", default=100, type=int)
     parser.add_argument("--from_scratch", default=True, action="store_false")
     parser.add_argument("--image_size", default=300, type=int)
     parser.add_argument("--model_type", default="five", type=str)
