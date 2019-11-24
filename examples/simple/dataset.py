@@ -12,19 +12,19 @@ EXCEL = "/home/xiangyuliu/Downloads/label.xlsx"
 #             "/home/xiangyuliu/mnt//newNAS/Workspaces/DRLGroup/xiangyuliu/clahe/x_4_clahe.npy"]
 
 pathlist = ["/newNAS/Workspaces/DRLGroup/xiangyuliu/clahe/x_0_clahe.npy",
-             "/newNAS/Workspaces/DRLGroup/xiangyuliu/clahe/x_1_clahe.npy",
-             "/newNAS/Workspaces/DRLGroup/xiangyuliu/clahe/x_2_clahe.npy",
-             "/newNAS/Workspaces/DRLGroup/xiangyuliu/clahe/x_3_clahe.npy",
-             "/newNAS/Workspaces/DRLGroup/xiangyuliu/clahe/x_4_clahe.npy"]
+            "/newNAS/Workspaces/DRLGroup/xiangyuliu/clahe/x_1_clahe.npy",
+            "/newNAS/Workspaces/DRLGroup/xiangyuliu/clahe/x_2_clahe.npy",
+            "/newNAS/Workspaces/DRLGroup/xiangyuliu/clahe/x_3_clahe.npy",
+            "/newNAS/Workspaces/DRLGroup/xiangyuliu/clahe/x_4_clahe.npy"]
 
 
 class CustomDataset(torch.utils.data.Dataset):
-    def __init__(self, path_list, transform=None, img_size=300, kinds = 5):
+    def __init__(self, path_list, transform=None, img_size=300, model_type="five"):
         self.data = []
         self.len_array = []
         self.img_size = img_size
         self.path_list = path_list
-        self.kinds = kinds
+        self.kinds = 4 if model_type == "four" else 5
         if self.kinds == 4:
             self.path_list = self.path_list[1:]
         if transform == None:
@@ -50,8 +50,6 @@ class CustomDataset(torch.utils.data.Dataset):
                 index = item - pre_len
                 break
             pre_len = self.len_array[i]
-        if self.kinds == 4:
-            label += 1
         img = self.data[label][index]
         img = self.image_transform(img)
         return img, label
@@ -73,7 +71,8 @@ class CustomDataset(torch.utils.data.Dataset):
         img = Image.fromarray(np.uint8(img))
         img = transforms.Resize(size=(self.img_size, self.img_size))(img)
         img = transforms.ToTensor()(img)
-        img = transforms.Normalize([0.341044359, 0.2591041, 0.2165859], [0.001024714638*255, 0.00083609472*255, 0.0008257308*255])(img)
+        img = transforms.Normalize([0.341044359, 0.2591041, 0.2165859],
+                                   [0.001024714638 * 255, 0.00083609472 * 255, 0.0008257308 * 255])(img)
         return img
 
     def calculate_mean_std(self):
@@ -81,8 +80,7 @@ class CustomDataset(torch.utils.data.Dataset):
             self.data[i] = np.uint8(self.data[i])
         whole_dataset = np.concatenate(tuple(self.data), axis=0)
         for i in range(3):
-            print(np.mean(whole_dataset[:, :, :, i])/255, np.std(whole_dataset[:, :, :, i])/255)
-
+            print(np.mean(whole_dataset[:, :, :, i]) / 255, np.std(whole_dataset[:, :, :, i]) / 255)
 
 
 if __name__ == '__main__':

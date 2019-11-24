@@ -37,7 +37,8 @@ def modify_labels(labels):
 
 def main(args):
     model_dir = Path('./logs') / args.model_type / str(args.model_scale) / (
-            str(args.image_size) + "-" + str(args.batch_size) + "-" + str(args.final_lr))
+                "load locally" + str(args.load_local) + "-squeeze" + str(args.squeeze)) / (
+                        str(args.image_size) + "-" + str(args.batch_size) + "-" + str(args.final_lr))
     if not model_dir.exists():
         run_num = 1
     else:
@@ -55,7 +56,7 @@ def main(args):
 
     save_path = "/newNAS/Workspaces/DRLGroup/xiangyuliu/EfficientNet-PyTorch/examples/simple/logs/binary/3/300-48/run1/param_2200.pt"
     classifier = Classifier(args).to(device)
-    if not args.from_scratch:
+    if args.load_local:
         classifier.load_state_dict(torch.load(save_path))
         args.lr = args.final_lr
     trainer = Trainer(classifier, args)
@@ -99,7 +100,8 @@ if __name__ == '__main__':
     parser.add_argument("--epoch", default=10, type=int)
     parser.add_argument("--eval_freq", default=50, type=int)
     parser.add_argument("--save_freq", default=100, type=int)
-    parser.add_argument("--from_scratch", default=True, action="store_false")
+    parser.add_argument("--load_local", default=False, action="store_true")
+    parser.add_argument("--squeeze", default=False, action="store_true")
     parser.add_argument("--image_size", default=300, type=int)
     parser.add_argument("--model_type", default="five", type=str)
     parser.add_argument("--model_scale", default=3, type=int)
