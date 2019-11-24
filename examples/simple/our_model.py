@@ -35,10 +35,10 @@ class Classifier(torch.nn.Module):
         x_2 = self._dropout_2(x_2)
         x_2 = self._fc_2(x_2)
 
-        x_3 = self._avg_pooling_2(x)
+        x_3 = self._avg_pooling_3(x)
         x_3 = x_3.view(bs, -1)
-        x_3 = self._dropout_2(x_3)
-        x_3 = self._fc_2(x_3)
+        x_3 = self._dropout_3(x_3)
+        x_3 = self._fc_3(x_3)
 
         x = torch.cat((x_1, x_2, x_3), dim=-1)
         return x

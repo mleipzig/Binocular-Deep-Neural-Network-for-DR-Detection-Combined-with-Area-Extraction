@@ -33,7 +33,7 @@ class CustomDataset(torch.utils.data.Dataset):
                                             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]), ])
         else:
             self.tfms = transform
-        for path, i in zip(path_list, range(len(path_list))):
+        for path, i in zip(path_list, range(len(self.path_list))):
             self.data.append(np.load(path, mmap_mode="r"))
             self.len_array.append(self.data[i].shape[0] - 20)
         for i in range(len(self.len_array)):

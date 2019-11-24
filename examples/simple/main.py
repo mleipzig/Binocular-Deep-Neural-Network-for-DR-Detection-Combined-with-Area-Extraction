@@ -60,7 +60,7 @@ def main(args):
         classifier.load_state_dict(torch.load(save_path))
         args.lr = args.final_lr
     trainer = Trainer(classifier, args)
-    train_data = CustomDataset(path_list, img_size=args.image_size)
+    train_data = CustomDataset(path_list, img_size=args.image_size, model_type=args.model_type)
     train_data.test_label = modify_labels(train_data.test_label)
     train_loader = torch.utils.data.DataLoader(dataset=train_data, batch_size=args.batch_size, shuffle=True,
                                                num_workers=2)
