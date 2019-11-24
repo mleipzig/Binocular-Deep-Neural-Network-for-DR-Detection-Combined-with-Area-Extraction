@@ -8,7 +8,7 @@ import numpy as np
 from pathlib import Path
 import os
 
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cpu')
 PATH = "/newNAS/Workspaces/DRLGroup/xiangyuliu/images"
 EXCEL = "/newNAS/Workspaces/DRLGroup/xiangyuliu/label.xlsx"
 path_list = ["/newNAS/Workspaces/DRLGroup/xiangyuliu/clahe/x_0_clahe.npy",
@@ -36,15 +36,6 @@ def modify_labels(labels):
 
 
 def main(args):
-    save_path = ""
-    classifier = Classifier(args).to(device)
-    classifier.load_state_dict(torch.load(save_path))
-    trainer = Trainer(classifier, args)
-    train_data = CustomDataset(path_list, img_size=args.image_size)
-    train_data.test_label = modify_labels(train_data.test_label)
-    train_loader = torch.utils.data.DataLoader(dataset=train_data, batch_size=args.batch_size, shuffle=True,
-                                               num_workers=4)
-
     model_dir = Path('./logs') / args.model_type / str(args.model_scale) / (
             str(args.image_size) + "-" + str(args.batch_size) + "-" + str(args.final_lr))
     if not model_dir.exists():
@@ -62,6 +53,13 @@ def main(args):
     os.makedirs(log_dir)
     logger = SummaryWriter(str(log_dir))
 
+    classifier = Classifier(args).to(device)
+    # classifier.load_state_dict(torch.load(save_path))
+    trainer = Trainer(classifier, args)
+    train_data = CustomDataset(path_list, img_size=args.image_size)
+    train_data.test_label = modify_labels(train_data.test_label)
+    train_loader = torch.utils.data.DataLoader(dataset=train_data, batch_size=args.batch_size, shuffle=True,
+                                               num_workers=2)
     iter = 0
     j = 0
     for i in range(args.epoch):
