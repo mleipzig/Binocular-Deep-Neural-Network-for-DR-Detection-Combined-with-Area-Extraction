@@ -19,10 +19,14 @@ pathlist = ["/newNAS/Workspaces/DRLGroup/xiangyuliu/clahe/x_0_clahe.npy",
 
 
 class CustomDataset(torch.utils.data.Dataset):
-    def __init__(self, path_list, transform=None, img_size=300):
+    def __init__(self, path_list, transform=None, img_size=300, kinds = 5):
         self.data = []
         self.len_array = []
         self.img_size = img_size
+        self.path_list = path_list
+        self.kinds = kinds
+        if self.kinds == 4:
+            self.path_list = self.path_list[1:]
         if transform == None:
             self.tfms = transforms.Compose([transforms.Resize(size=(img_size, img_size)),
                                             transforms.ToTensor(),
@@ -46,7 +50,8 @@ class CustomDataset(torch.utils.data.Dataset):
                 index = item - pre_len
                 break
             pre_len = self.len_array[i]
-
+        if self.kinds == 4:
+            label += 1
         img = self.data[label][index]
         img = self.image_transform(img)
         return img, label
@@ -57,7 +62,7 @@ class CustomDataset(torch.utils.data.Dataset):
     def _fetch_test_data(self):
         image_list = []
         label_list = []
-        for label in range(5):
+        for label in range(self.kinds):
             for index in range(20):
                 index = index - 20
                 image_list.append(self.image_transform(self.data[label][index]))

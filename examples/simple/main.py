@@ -53,8 +53,11 @@ def main(args):
     os.makedirs(log_dir)
     logger = SummaryWriter(str(log_dir))
 
+    save_path = "/newNAS/Workspaces/DRLGroup/xiangyuliu/EfficientNet-PyTorch/examples/simple/logs/binary/3/300-48/run1/param_2200.pt"
     classifier = Classifier(args).to(device)
-    # classifier.load_state_dict(torch.load(save_path))
+    if not args.from_scratch:
+        classifier.load_state_dict(torch.load(save_path))
+        args.lr = args.final_lr
     trainer = Trainer(classifier, args)
     train_data = CustomDataset(path_list, img_size=args.image_size)
     train_data.test_label = modify_labels(train_data.test_label)
