@@ -82,6 +82,15 @@ class CustomDataset(torch.utils.data.Dataset):
         for i in range(3):
             print(np.mean(whole_dataset[:, :, :, i]) / 255, np.std(whole_dataset[:, :, :, i]) / 255)
 
+    def covert_to_rgb(self):
+        a = self.data[0][:, :, :, 0]
+        b = self.data[0][:, :, :, 2]
+
+        self.data[0][:, :, :, 0] = b
+        self.data[0][:, :, :, 2] = a
+
+        np.save(self.data[0], "/newNAS/Workspaces/DRLGroup/xiangyuliu/clahe/x_0.npy")
+
 
 if __name__ == '__main__':
     dataset = CustomDataset(pathlist)
