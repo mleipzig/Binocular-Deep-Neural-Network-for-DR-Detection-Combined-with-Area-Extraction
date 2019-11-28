@@ -1,6 +1,6 @@
 import argparse
 import torch
-from examples.simple.our_model import Classifier
+from examples.simple.our_model import ResNet
 from examples.simple.trainer import Trainer, device
 from tensorboardX import SummaryWriter
 from examples.simple.dataset import CustomDataset
@@ -33,9 +33,7 @@ def modify_labels(labels):
 
 
 def main(args):
-    model_dir = Path('./new_logs') / args.model_type / str(args.model_scale) / (
-                "loadlocally" + str(args.load_local) + "-squeeze" + str(args.squeeze)) / (
-                        str(args.image_size) + "-" + str(args.batch_size) + "-" + str(args.final_lr))
+    model_dir = Path('./resnet') / (str(args.image_size) + "-" + str(args.batch_size) + "-" + str(args.final_lr))
     if not model_dir.exists():
         run_num = 1
     else:
@@ -52,14 +50,11 @@ def main(args):
     logger = SummaryWriter(str(log_dir))
 
     save_path = "/newNAS/Workspaces/DRLGroup/xiangyuliu/EfficientNet-PyTorch/examples/simple/logs/four/3/load locallyFalse-squeezeFalse/300-48-1e-10/run1/param_400.pt"
-    classifier = Classifier(args).to(device)
+    classifier = ResNet(block=None, layers=[2, 2, 2], num_classes=4).to(device)
     print(classifier)
     if args.load_local:
         classifier.load_state_dict(torch.load(save_path))
         args.lr = args.final_lr
-        print("load locally")
-    if args.squeeze:
-        print("freeze the low layers")
     trainer = Trainer(classifier, args)
     train_data = CustomDataset(path_list, img_size=args.image_size, model_type=args.model_type)
     train_data.test_label = modify_labels(train_data.test_label)
@@ -93,19 +88,18 @@ def main(args):
             iter += 1
 
 
-# Todo: (1)data preprocess(add more samples and normalize) (2)partition the data set (3)multiprocess (4) try gpu version (5) visualize the figure
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
     parser.add_argument("--lr", default=0.01, type=float)
-    parser.add_argument("--final_lr", default=1e-6, type=float)
-    parser.add_argument("--batch_size", default=64, type=int)
+    parser.add_argument("--final_lr", default=1e-5, type=float)
+    parser.add_argument("--batch_size", default=128, type=int)
     parser.add_argument("--epoch", default=50, type=int)
     parser.add_argument("--eval_freq", default=50, type=int)
     parser.add_argument("--save_freq", default=100, type=int)
     parser.add_argument("--load_local", default=False, action="store_true")
     parser.add_argument("--squeeze", default=False, action="store_true")
     parser.add_argument("--image_size", default=300, type=int)
-    parser.add_argument("--model_type", default="five", type=str)
+    parser.add_argument("--model_type", default="four", type=str)
     parser.add_argument("--model_scale", default=3, type=int)
     args = parser.parse_args()
     main(args)

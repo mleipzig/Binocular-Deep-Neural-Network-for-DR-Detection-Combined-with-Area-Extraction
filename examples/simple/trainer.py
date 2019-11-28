@@ -1,5 +1,4 @@
 import torch
-
 device = torch.device('cpu')
 
 
@@ -18,6 +17,8 @@ class Trainer():
             return self.train_a_batch_five(batch, labels)
         elif self.model_type == "four":
             return self.train_a_batch_four(batch, labels)
+        elif self.model_type == "resnet":
+            return self.train_resnet(batch, labels)
         else:
             print("no such model")
 
@@ -61,6 +62,8 @@ class Trainer():
             return self.evaluate_five(batch, labels)
         elif self.model_type == "four":
             return self.evaluate_four(batch, labels)
+        elif self.model_type == "resnet":
+            return self.evaluate_resnet(batch, labels)
         else:
             print("no such model")
 
@@ -109,6 +112,35 @@ class Trainer():
         with torch.no_grad():
             outputs = self.model(batch)
             loss = self.criteria(outputs[:, 7:], labels[0])
+            for i in range(batch_size):
+                output = outputs[i][0:4]
+                healthy = torch.argmax(output)
+                print(" label:", labels[0][i].item(), " predict:", healthy.item(), " prob:",
+                      torch.max(torch.softmax(output, dim=0)).item())
+                if healthy == labels[0][i]:
+                    accuracy += 1
+        return accuracy / batch_size, loss.item()
+
+    def train_resnet(self, batch, labels):
+        self.model.train()
+        batch = batch.to(device)
+        labels = labels.to(device)
+        outputs = self.model(batch)
+        loss = self.criteria(outputs, labels[0])
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+        return loss.item()
+
+    def evaluate_resnet(self, batch, labels):
+        self.model.eval()
+        batch = batch.to(device)
+        labels = labels.to(device)
+        batch_size = batch.shape[0]
+        accuracy = 0
+        with torch.no_grad():
+            outputs = self.model(batch)
+            loss = self.criteria(outputs, labels[0])
             for i in range(batch_size):
                 output = outputs[i][0:4]
                 healthy = torch.argmax(output)
