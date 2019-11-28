@@ -15,7 +15,7 @@ class CustomDataset(torch.utils.data.Dataset):
         self.len_array = []
         self.img_size = img_size
         self.path_list = path_list
-        self.kinds = 4 if (model_type == "four" or model_type == 'resnet') else 5
+        self.kinds = 4 if (model_type == "four" or model_type == 'univ_net') else 5
         if self.kinds == 4:
             self.path_list = self.path_list[1:]
         if transform == None:

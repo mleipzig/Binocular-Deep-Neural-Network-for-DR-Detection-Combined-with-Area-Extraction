@@ -10,10 +10,10 @@ from pathlib import Path
 import os
 
 path_list = ["/newNAS/Workspaces/DRLGroup/xiangyuliu/NEW/x_0.npy",
-            "/newNAS/Workspaces/DRLGroup/xiangyuliu/NEW/x_1.npy",
-            "/newNAS/Workspaces/DRLGroup/xiangyuliu/NEW/x_2.npy",
-            "/newNAS/Workspaces/DRLGroup/xiangyuliu/NEW/x_3.npy",
-            "/newNAS/Workspaces/DRLGroup/xiangyuliu/NEW/x_4.npy"]
+             "/newNAS/Workspaces/DRLGroup/xiangyuliu/NEW/x_1.npy",
+             "/newNAS/Workspaces/DRLGroup/xiangyuliu/NEW/x_2.npy",
+             "/newNAS/Workspaces/DRLGroup/xiangyuliu/NEW/x_3.npy",
+             "/newNAS/Workspaces/DRLGroup/xiangyuliu/NEW/x_4.npy"]
 
 
 def adjust_learning_rate(optimizer, epoch, args):
@@ -34,7 +34,8 @@ def modify_labels(labels):
 
 
 def main(args):
-    model_dir = Path('./resnet') / (str(args.image_size) + "-" + str(args.batch_size) + "-" + str(args.final_lr))
+    model_dir = Path('./univ_net') / args.model_detail / (
+            str(args.image_size) + "-" + str(args.batch_size) + "-" + str(args.final_lr))
     if not model_dir.exists():
         run_num = 1
     else:
@@ -51,7 +52,17 @@ def main(args):
     logger = SummaryWriter(str(log_dir))
 
     save_path = "/newNAS/Workspaces/DRLGroup/xiangyuliu/EfficientNet-PyTorch/examples/simple/logs/four/3/load locallyFalse-squeezeFalse/300-48-1e-10/run1/param_400.pt"
-    classifier = ResNet(block=None, layers=[2, 2, 2], num_classes=4).to(device)
+    # classifier = ResNet(block=None, layers=[2, 2, 2], num_classes=4).to(device)
+    model_dict = {"resnet18": torchvision.models.resnet18(pretrained=args.pretrain),
+                  "resnet34": torchvision.models.resnet34(pretrained=args.pretrain),
+                  "resnet50": torchvision.models.resnet50(pretrained=args.pretrain),
+                  "resnet101": torchvision.models.resnet101(pretrained=args.pretrain),
+                  "resnet152": torchvision.models.resnet152(pretrained=args.pretrain),
+                  "densenet121": torchvision.models.densenet121(pretrained=args.pretrain),
+                  "densenet": torchvision.models.densenet161(pretrained=args.pretrain),
+                  "densenet169": torchvision.models.densenet169(pretrained=args.pretrain),
+                  "densenet201": torchvision.models.densenet201(pretrained=args.pretrain)}
+    classifier = model_dict[args.model_detail]
     print(classifier)
     if args.load_local:
         classifier.load_state_dict(torch.load(save_path))
@@ -99,9 +110,12 @@ if __name__ == '__main__':
     parser.add_argument("--eval_freq", default=50, type=int)
     parser.add_argument("--save_freq", default=100, type=int)
     parser.add_argument("--load_local", default=False, action="store_true")
+    parser.add_argument("--pretrained", default=False, action="store_true")
     parser.add_argument("--squeeze", default=False, action="store_true")
     parser.add_argument("--image_size", default=300, type=int)
-    parser.add_argument("--model_type", default="four", type=str)
+    parser.add_argument("--model_type", default="univ_net", type=str)
+    parser.add_argument("--model_detail", default="resnet18", type=str)
     parser.add_argument("--model_scale", default=3, type=int)
+
     args = parser.parse_args()
     main(args)

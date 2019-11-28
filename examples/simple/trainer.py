@@ -17,8 +17,8 @@ class Trainer():
             return self.train_a_batch_five(batch, labels)
         elif self.model_type == "four":
             return self.train_a_batch_four(batch, labels)
-        elif self.model_type == "resnet":
-            return self.train_resnet(batch, labels)
+        elif self.model_type == "univ_net":
+            return self.train_univ_net(batch, labels)
         else:
             print("no such model")
 
@@ -62,8 +62,8 @@ class Trainer():
             return self.evaluate_five(batch, labels)
         elif self.model_type == "four":
             return self.evaluate_four(batch, labels)
-        elif self.model_type == "resnet":
-            return self.evaluate_resnet(batch, labels)
+        elif self.model_type == "univ_net":
+            return self.evaluate_univ_net(batch, labels)
         else:
             print("no such model")
 
@@ -121,7 +121,7 @@ class Trainer():
                     accuracy += 1
         return accuracy / batch_size, loss.item()
 
-    def train_resnet(self, batch, labels):
+    def train_univ_net(self, batch, labels):
         self.model.train()
         batch = batch.to(device)
         labels = labels.to(device)
@@ -132,7 +132,7 @@ class Trainer():
         self.optimizer.step()
         return loss.item()
 
-    def evaluate_resnet(self, batch, labels):
+    def evaluate_univ_net(self, batch, labels):
         self.model.eval()
         batch = batch.to(device)
         labels = labels.to(device)
