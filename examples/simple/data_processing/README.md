@@ -36,3 +36,43 @@ x=np.load(path,mmap_mode='r')
 
 ```
 
+# Usage of Resnet Model
+
+- install pytorch-gpu and tensorboardX
+
+- clone the  repo, add set PYTHONPATH and get into the work directory
+
+```shell
+git clone https://github.com/xiangyu-liu/EfficientNet-PyTorch.git
+cd EfficientNet-PyTorch
+export PYTHONPATH=./:$PYTHONPATH
+cd ./example/simple
+```
+
+- modify the path where data is stored. It is in the main.py file. Change it to you data path
+
+```python
+path_list = ["/newNAS/Workspaces/DRLGroup/xiangyuliu/NEW/x_0.npy",
+            "/newNAS/Workspaces/DRLGroup/xiangyuliu/NEW/x_1.npy",
+            "/newNAS/Workspaces/DRLGroup/xiangyuliu/NEW/x_2.npy",
+            "/newNAS/Workspaces/DRLGroup/xiangyuliu/NEW/x_3.npy",
+            "/newNAS/Workspaces/DRLGroup/xiangyuliu/NEW/x_4.npy"]
+```
+
+- run a specific model
+
+```shell
+python universal_net.py --model_detail resnet18 --image_size 30 --batch_size 64
+```
+
+- if the model is too large, you can:
+
+  - change the image_size argument or change the batch_size
+
+  - run another file and change the argument.
+
+    ```shell
+    python resnet.py --image_size 30 --batch_size 64
+    ```
+
+- you just need to change the image_size and batch_size to find the better hyper-parameters
