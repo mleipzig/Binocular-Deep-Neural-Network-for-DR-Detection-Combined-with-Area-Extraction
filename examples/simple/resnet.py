@@ -1,6 +1,7 @@
 import argparse
 import torch
-import torchvision
+
+from examples.simple.main import path_list
 from examples.simple.our_model import ResNet
 from examples.simple.trainer import Trainer, device
 from tensorboardX import SummaryWriter
@@ -9,12 +10,6 @@ import numpy as np
 from pathlib import Path
 import torchvision
 import os
-
-path_list = ["/newNAS/Workspaces/DRLGroup/xiangyuliu/NEW/x_0.npy",
-            "/newNAS/Workspaces/DRLGroup/xiangyuliu/NEW/x_1.npy",
-            "/newNAS/Workspaces/DRLGroup/xiangyuliu/NEW/x_2.npy",
-            "/newNAS/Workspaces/DRLGroup/xiangyuliu/NEW/x_3.npy",
-            "/newNAS/Workspaces/DRLGroup/xiangyuliu/NEW/x_4.npy"]
 
 
 def adjust_learning_rate(optimizer, epoch, args):
@@ -52,12 +47,12 @@ def main(args):
     os.makedirs(log_dir)
     logger = SummaryWriter(str(log_dir))
 
-    save_path = "/newNAS/Workspaces/DRLGroup/xiangyuliu/EfficientNet-PyTorch/examples/simple/logs/four/3/load locallyFalse-squeezeFalse/300-48-1e-10/run1/param_400.pt"
+    # save_path = "/newNAS/Workspaces/DRLGroup/xiangyuliu/EfficientNet-PyTorch/examples/simple/logs/four/3/load locallyFalse-squeezeFalse/300-48-1e-10/run1/param_400.pt"
     classifier = ResNet(block=None, layers=[2, 2, 2], num_classes=4).to(device)
     print(classifier)
-    if args.load_local:
-        classifier.load_state_dict(torch.load(save_path))
-        args.lr = args.final_lr
+    # if args.load_local:
+    #     classifier.load_state_dict(torch.load(save_path))
+    #     args.lr = args.final_lr
     trainer = Trainer(classifier, args)
     train_data = CustomDataset(path_list, img_size=args.image_size, model_type=args.model_type)
     train_data.test_label = modify_labels(train_data.test_label)
@@ -90,7 +85,6 @@ def main(args):
                 print("saving model")
                 torch.save(classifier.state_dict(), log_dir / ("param_%i.pt" % iter))
             iter += 1
-            torchvision.models
 
 
 if __name__ == '__main__':
@@ -102,9 +96,7 @@ if __name__ == '__main__':
     parser.add_argument("--eval_freq", default=50, type=int)
     parser.add_argument("--save_freq", default=100, type=int)
     parser.add_argument("--load_local", default=False, action="store_true")
-    parser.add_argument("--squeeze", default=False, action="store_true")
     parser.add_argument("--image_size", default=300, type=int)
-    parser.add_argument("--model_type", default="four", type=str)
-    parser.add_argument("--model_scale", default=3, type=int)
+    parser.add_argument("--model_type", default="univ_net", type=str)
     args = parser.parse_args()
     main(args)
