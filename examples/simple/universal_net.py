@@ -22,6 +22,7 @@ def adjust_learning_rate(optimizer, epoch, args):
         lr = args.final_lr
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
+    return lr
 
 
 def modify_labels(labels):
@@ -61,7 +62,9 @@ def main(args):
                   "densenet121": torchvision.models.densenet121(pretrained=args.pretrain),
                   "densenet": torchvision.models.densenet161(pretrained=args.pretrain),
                   "densenet169": torchvision.models.densenet169(pretrained=args.pretrain),
-                  "densenet201": torchvision.models.densenet201(pretrained=args.pretrain)}
+                  "densenet201": torchvision.models.densenet201(pretrained=args.pretrain),
+                  "wide_resnet50_2": torchvision.models.wide_resnet50_2(pretrained=args.pretrain),
+                  "wide_resnet101_2": torchvision.models.wide_resnet101_2(pretrained=args.pretrain)}
     classifier = model_dict[args.model_detail]
     print(classifier)
     if args.load_local:
@@ -77,7 +80,7 @@ def main(args):
     for i in range(args.epoch):
         # the batch and labels are both tensors
         for image_batch, labels in train_loader:
-            adjust_learning_rate(trainer.optimizer, i, args)
+            tmp_lr = adjust_learning_rate(trainer.optimizer, i, args)
             labels = modify_labels(labels)
             # we need the label of shape (?, 2)
             loss = trainer.train(image_batch, labels)
@@ -91,6 +94,7 @@ def main(args):
                 logger.add_scalar("test_loss", test_loss, j)
                 logger.add_scalar("test_accuracy", test_accuracy, j)
                 logger.add_scalar("train_accuracy", train_accuracy, j)
+                logger.add_scalar("learning rate", tmp_lr, j)
                 print("train accuracy:", train_accuracy, " test accuracy:", test_accuracy)
                 print("train loss:", train_loss, " test loss:", test_loss)
                 j += 1
@@ -103,14 +107,14 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
-    parser.add_argument("--lr", default=0.01, type=float)
-    parser.add_argument("--final_lr", default=1e-5, type=float)
+    parser.add_argument("--lr", default=0.1, type=float)
+    parser.add_argument("--final_lr", default=1e-6, type=float)
     parser.add_argument("--batch_size", default=128, type=int)
     parser.add_argument("--epoch", default=50, type=int)
     parser.add_argument("--eval_freq", default=50, type=int)
     parser.add_argument("--save_freq", default=100, type=int)
     parser.add_argument("--load_local", default=False, action="store_true")
-    parser.add_argument("--pretrained", default=False, action="store_true")
+    parser.add_argument("--pretrain", default=False, action="store_true")
     parser.add_argument("--squeeze", default=False, action="store_true")
     parser.add_argument("--image_size", default=300, type=int)
     parser.add_argument("--model_type", default="univ_net", type=str)

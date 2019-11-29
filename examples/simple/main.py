@@ -16,7 +16,7 @@ path_list = ["/newNAS/Workspaces/DRLGroup/xiangyuliu/NEW/x_0.npy",
 
 
 def adjust_learning_rate(optimizer, epoch, args):
-    lr = args.lr * (0.2 ** epoch)
+    lr = args.lr * (0.2 ** (epoch//2))
     if lr <= args.final_lr:
         lr = args.final_lr
     for param_group in optimizer.param_groups:
@@ -96,7 +96,7 @@ def main(args):
 # Todo: (1)data preprocess(add more samples and normalize) (2)partition the data set (3)multiprocess (4) try gpu version (5) visualize the figure
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
-    parser.add_argument("--lr", default=0.01, type=float)
+    parser.add_argument("--lr", default=0.1, type=float)
     parser.add_argument("--final_lr", default=1e-6, type=float)
     parser.add_argument("--batch_size", default=64, type=int)
     parser.add_argument("--epoch", default=50, type=int)

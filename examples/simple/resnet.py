@@ -7,6 +7,7 @@ from tensorboardX import SummaryWriter
 from examples.simple.dataset import CustomDataset
 import numpy as np
 from pathlib import Path
+import torchvision
 import os
 
 path_list = ["/newNAS/Workspaces/DRLGroup/xiangyuliu/NEW/x_0.npy",
@@ -22,6 +23,7 @@ def adjust_learning_rate(optimizer, epoch, args):
         lr = args.final_lr
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
+    return lr
 
 
 def modify_labels(labels):
@@ -66,7 +68,7 @@ def main(args):
     for i in range(args.epoch):
         # the batch and labels are both tensors
         for image_batch, labels in train_loader:
-            adjust_learning_rate(trainer.optimizer, i, args)
+            tmp_lr = adjust_learning_rate(trainer.optimizer, i, args)
             labels = modify_labels(labels)
             # we need the label of shape (?, 2)
             loss = trainer.train(image_batch, labels)
@@ -80,6 +82,7 @@ def main(args):
                 logger.add_scalar("test_loss", test_loss, j)
                 logger.add_scalar("test_accuracy", test_accuracy, j)
                 logger.add_scalar("train_accuracy", train_accuracy, j)
+                logger.add_scalar("learning rate", tmp_lr, j)
                 print("train accuracy:", train_accuracy, " test accuracy:", test_accuracy)
                 print("train loss:", train_loss, " test loss:", test_loss)
                 j += 1
@@ -92,8 +95,8 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
-    parser.add_argument("--lr", default=0.01, type=float)
-    parser.add_argument("--final_lr", default=1e-5, type=float)
+    parser.add_argument("--lr", default=0.1, type=float)
+    parser.add_argument("--final_lr", default=1e-6, type=float)
     parser.add_argument("--batch_size", default=128, type=int)
     parser.add_argument("--epoch", default=50, type=int)
     parser.add_argument("--eval_freq", default=50, type=int)
