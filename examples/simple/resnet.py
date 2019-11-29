@@ -1,24 +1,14 @@
 import argparse
 import torch
 
-from examples.simple.main import path_list
+from examples.simple.main import path_list, adjust_learning_rate
 from examples.simple.our_model import ResNet
 from examples.simple.trainer import Trainer, device
 from tensorboardX import SummaryWriter
 from examples.simple.dataset import CustomDataset
 import numpy as np
 from pathlib import Path
-import torchvision
 import os
-
-
-def adjust_learning_rate(optimizer, epoch, args):
-    lr = args.lr * (0.2 ** epoch)
-    if lr <= args.final_lr:
-        lr = args.final_lr
-    for param_group in optimizer.param_groups:
-        param_group['lr'] = lr
-    return lr
 
 
 def modify_labels(labels):
