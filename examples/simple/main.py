@@ -16,11 +16,12 @@ path_list = ["/newNAS/Workspaces/DRLGroup/xiangyuliu/NEW/x_0.npy",
 
 
 def adjust_learning_rate(optimizer, epoch, args):
-    lr = args.lr * (0.2 ** (epoch//2))
+    lr = args.lr * (0.25 ** epoch)
     if lr <= args.final_lr:
         lr = args.final_lr
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
+    return lr
 
 
 def modify_labels(labels):

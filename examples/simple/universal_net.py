@@ -2,7 +2,7 @@ import argparse
 import torch
 import torchvision
 
-from examples.imagenet.main import adjust_learning_rate
+from examples.simple.main import adjust_learning_rate
 from examples.simple.trainer import Trainer, device
 from tensorboardX import SummaryWriter
 from examples.simple.dataset import CustomDataset, path_list
@@ -88,12 +88,11 @@ def main(args):
                 print("saving model")
                 torch.save(classifier.state_dict(), log_dir / ("param_%i.pt" % iter))
             iter += 1
-            torchvision.models
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
-    parser.add_argument("--lr", default=0.1, type=float)
+    parser.add_argument("--lr", default=0.01, type=float)
     parser.add_argument("--final_lr", default=1e-6, type=float)
     parser.add_argument("--batch_size", default=128, type=int)
     parser.add_argument("--epoch", default=50, type=int)
