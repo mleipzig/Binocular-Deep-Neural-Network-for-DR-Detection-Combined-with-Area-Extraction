@@ -20,6 +20,7 @@ def modify_labels(labels):
     return torch.tensor(labels, dtype=torch.long)
 
 
+
 def main(args):
     model_dir = Path('./univ_net') / args.model_detail / (
             str(args.image_size) + "-" + str(args.batch_size) + "-" + str(args.final_lr))
@@ -37,9 +38,6 @@ def main(args):
     log_dir = model_dir / curr_run
     os.makedirs(log_dir)
     logger = SummaryWriter(str(log_dir))
-
-    # save_path = "/newNAS/Workspaces/DRLGroup/xiangyuliu/EfficientNet-PyTorch/examples/simple/logs/four/3/load locallyFalse-squeezeFalse/300-48-1e-10/run1/param_400.pt"
-    # classifier = ResNet(block=None, layers=[2, 2, 2], num_classes=4).to(device)
     model_dict = {"resnet18": torchvision.models.resnet18(pretrained=args.pretrain),
                   "resnet34": torchvision.models.resnet34(pretrained=args.pretrain),
                   "resnet50": torchvision.models.resnet50(pretrained=args.pretrain),
@@ -103,6 +101,5 @@ if __name__ == '__main__':
     parser.add_argument("--image_size", default=300, type=int)
     parser.add_argument("--model_type", default="univ_net", type=str)
     parser.add_argument("--model_detail", default="resnet18", type=str)
-
     args = parser.parse_args()
     main(args)

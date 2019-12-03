@@ -7,23 +7,21 @@ from examples.simple.main import path_list
 
 
 class CustomDataset(torch.utils.data.Dataset):
-    def __init__(self, path_list, transform=None, img_size=300, model_type="five"):
+    def __init__(self, path_list, img_size=300, model_type="binary", test=False):
         self.data = []
         self.len_array = []
         self.img_size = img_size
         self.path_list = path_list
-        self.kinds = 4 if (model_type == "four" or model_type == 'univ_net' or model_type == "resnet") else 5
+        self.kinds = 5 if model_type == "binary" else 4
+        self.test = test
         if self.kinds == 4:
             self.path_list = self.path_list[1:]
-        if transform == None:
-            self.tfms = transforms.Compose([transforms.Resize(size=(img_size, img_size)),
-                                            transforms.ToTensor(),
-                                            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]), ])
-        else:
-            self.tfms = transform
         for path, i in zip(path_list, range(len(self.path_list))):
             self.data.append(np.load(path, mmap_mode="r"))
-            self.len_array.append(self.data[i].shape[0] - 20)
+            if self.test:
+                self.len_array.append(self.data[i].shape[0])
+            else:
+                self.len_array.append(self.data[i].shape[0] - 20)
         for i in range(len(self.len_array)):
             if i == 0:
                 continue
@@ -38,7 +36,10 @@ class CustomDataset(torch.utils.data.Dataset):
                 index = item - pre_len
                 break
             pre_len = self.len_array[i]
-        img = self.data[label][index + 10]
+        if self.test:
+            img = self.data[label][index]
+        else:
+            img = self.data[label][index + 10]
         img = self.image_transform(img)
         return img, label
 
