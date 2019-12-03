@@ -100,7 +100,7 @@ if __name__ == '__main__':
     parser.add_argument("--lr", default=0.1, type=float)
     parser.add_argument("--final_lr", default=1e-6, type=float)
     parser.add_argument("--batch_size", default=64, type=int)
-    parser.add_argument("--epoch", default=50, type=int)
+    parser.add_argument("--epoch", default=10, type=int)
     parser.add_argument("--eval_freq", default=50, type=int)
     parser.add_argument("--save_freq", default=100, type=int)
     parser.add_argument("--load_local", default=False, action="store_true")

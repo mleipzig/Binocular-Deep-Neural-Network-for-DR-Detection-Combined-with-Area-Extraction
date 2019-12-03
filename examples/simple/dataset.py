@@ -3,11 +3,8 @@ import torch
 from torchvision import transforms
 from PIL import Image
 
-path_list = ["/newNAS/Workspaces/DRLGroup/xiangyuliu/NEW/x_0.npy",
-            "/newNAS/Workspaces/DRLGroup/xiangyuliu/NEW/x_1.npy",
-            "/newNAS/Workspaces/DRLGroup/xiangyuliu/NEW/x_2.npy",
-            "/newNAS/Workspaces/DRLGroup/xiangyuliu/NEW/x_3.npy",
-            "/newNAS/Workspaces/DRLGroup/xiangyuliu/NEW/x_4.npy"]
+from examples.simple.main import path_list
+
 
 class CustomDataset(torch.utils.data.Dataset):
     def __init__(self, path_list, transform=None, img_size=300, model_type="five"):

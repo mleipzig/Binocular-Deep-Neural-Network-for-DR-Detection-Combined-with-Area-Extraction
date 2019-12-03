@@ -1,21 +1,15 @@
 import argparse
 import torch
 
-from examples.simple.main import modify_labels
+from examples.simple.main import modify_labels, path_list
 from examples.simple.our_model import Classifier
 from examples.simple.trainer import Trainer
 from examples.simple.dataset import CustomDataset
 import numpy as np
 
-device = torch.device('cpu')
-path_list = ["/newNAS/Workspaces/DRLGroup/xiangyuliu/clahe/x_0.npy",
-            "/newNAS/Workspaces/DRLGroup/xiangyuliu/clahe/x_1.npy",
-            "/newNAS/Workspaces/DRLGroup/xiangyuliu/clahe/x_2.npy",
-            "/newNAS/Workspaces/DRLGroup/xiangyuliu/clahe/x_3.npy",
-            "/newNAS/Workspaces/DRLGroup/xiangyuliu/clahe/x_4.npy"]
 def main(args):
     save_path = "/newNAS/Workspaces/DRLGroup/xiangyuliu/EfficientNet-PyTorch/examples/simple/logs/four/3/load locallyFalse-squeezeFalse/300-48-1e-10/run1/param_1700.pt"
-    classifier = Classifier(args).to(device)
+    classifier = Classifier(args).to(torch.device)
     classifier.load_state_dict(torch.load(save_path))
     trainer = Trainer(classifier, args)
 
