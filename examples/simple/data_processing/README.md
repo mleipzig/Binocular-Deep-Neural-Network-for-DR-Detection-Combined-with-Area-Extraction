@@ -76,3 +76,15 @@ python universal_net.py --model_detail resnet18 --image_size 30 --batch_size 64
     ```
 
 - you just need to change the image_size and batch_size to find the better hyper-parameters
+
+# Guide on test_model.py
+
+- first modify the of your data( it is name path_list in the code file) and the saved model( it is named save_path in the code file)
+
+- second run test_model.py. Only three arguments are needed
+
+  ```python
+  python test_model.py --model_type four(/binary) --model_detail resnet18 --image_size 224 
+  ```
+
+  If you model_type is binary the model_detail is not needed
