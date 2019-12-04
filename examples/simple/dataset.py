@@ -3,8 +3,6 @@ import torch
 from torchvision import transforms
 from PIL import Image
 
-from examples.simple.main import path_list
-
 
 class CustomDataset(torch.utils.data.Dataset):
     def __init__(self, path_list, img_size=300, sort_kinds=4, test=False):
@@ -85,9 +83,3 @@ class CustomDataset(torch.utils.data.Dataset):
         np.save("/newNAS/Workspaces/DRLGroup/xiangyuliu/clahe/x_2.npy", np.uint8(self.data[2]))
         np.save("/newNAS/Workspaces/DRLGroup/xiangyuliu/clahe/x_3.npy", np.uint8(self.data[3]))
         np.save("/newNAS/Workspaces/DRLGroup/xiangyuliu/clahe/x_4.npy", np.uint8(self.data[4]))
-
-
-
-if __name__ == '__main__':
-    dataset = CustomDataset(path_list)
-    dataset.calculate_mean_std()

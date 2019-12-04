@@ -2,11 +2,11 @@ import argparse
 import torch
 import torchvision
 
-from examples.simple.main import adjust_learning_rate
+from examples.simple.main import adjust_learning_rate, path_list
 from examples.simple.our_model import Classifier
 from examples.simple.trainer import Trainer, device
 from tensorboardX import SummaryWriter
-from examples.simple.dataset import CustomDataset, path_list
+from examples.simple.dataset import CustomDataset
 import numpy as np
 from pathlib import Path
 import os
@@ -98,6 +98,7 @@ if __name__ == '__main__':
     parser.add_argument("--save_freq", default=100, type=int)
     parser.add_argument("--load_local", default=False, action="store_true")
     parser.add_argument("--pretrain", default=False, action="store_true")
+    parser.add_argument("--squeeze", default=False, action="store_true")
 
     parser.add_argument("--image_size", default=300, type=int)
     parser.add_argument("--sort_kinds", default=4, type=int)

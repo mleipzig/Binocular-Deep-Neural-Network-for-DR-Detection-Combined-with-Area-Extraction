@@ -13,7 +13,7 @@ class Trainer():
         self.mode_detail = args.model_detail
 
     def train(self, batch, labels):
-        if "effficientnet" not in self.mode_detail:
+        if "efficientnet" not in self.mode_detail:
             return self.train_univ_net(batch, labels)
         else:
             if self.sort_kinds == 2:
@@ -69,7 +69,7 @@ class Trainer():
         return loss.item()
 
     def evaluate(self, batch, labels):
-        if "effficientnet" not in self.mode_detail:
+        if "efficientnet" not in self.mode_detail:
             return self.evaluate_univ_net(batch, labels)
         else:
             if self.sort_kinds == 2:
