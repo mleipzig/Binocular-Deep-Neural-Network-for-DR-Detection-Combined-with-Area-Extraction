@@ -47,7 +47,7 @@ class CustomDataset(torch.utils.data.Dataset):
     def _fetch_test_data(self):
         image_list = []
         label_list = []
-        for label in range(self.kinds):
+        for label in range(self.sort_kinds):
             for index in range(10):
                 image_list.append(self.image_transform(self.data[label][index]))
                 image_list.append(self.image_transform(self.data[label][-index - 1]))
