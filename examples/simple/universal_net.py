@@ -72,9 +72,9 @@ def main(args):
             logger.add_scalar("train_loss", loss, iter)
             if iter % args.eval_freq == args.eval_freq - 1 or iter == 0:
                 print("----test results")
-                test_accuracy, test_loss = trainer.evaluate(train_data.test_batch, train_data.test_label)
+                test_accuracy, test_loss, _ = trainer.evaluate(train_data.test_batch, train_data.test_label)
                 print("----train results")
-                train_accuracy, train_loss = trainer.evaluate(image_batch, labels)
+                train_accuracy, train_loss, _ = trainer.evaluate(image_batch, labels)
                 logger.add_scalar("test_loss", test_loss, j)
                 logger.add_scalar("test_accuracy", test_accuracy, j)
                 logger.add_scalar("train_accuracy", train_accuracy, j)

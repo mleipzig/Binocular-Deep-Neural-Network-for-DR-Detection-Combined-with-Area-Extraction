@@ -95,7 +95,7 @@ class Trainer():
                       torch.max(torch.softmax(output, dim=0)).item())
                 if healthy == labels[0][i]:
                     accuracy += 1
-        return accuracy / batch_size, loss.item()
+        return accuracy / batch_size, loss.item(), outputs[:, 0:5]
 
     def evaluate_binary(self, batch, labels):
         self.model.eval()
@@ -113,7 +113,7 @@ class Trainer():
                       torch.max(torch.softmax(output, dim=0)).item())
                 if healthy == labels[1][i]:
                     accuracy += 1
-        return accuracy / batch_size, loss.item()
+        return accuracy / batch_size, loss.item(), outputs[:, 5:7]
 
     def evaluate_four(self, batch, labels):
         self.model.eval()
@@ -131,7 +131,7 @@ class Trainer():
                       torch.max(torch.softmax(output, dim=0)).item())
                 if healthy == labels[0][i]:
                     accuracy += 1
-        return accuracy / batch_size, loss.item()
+        return accuracy / batch_size, loss.item(), outputs[:, 7:]
 
     def evaluate_univ_net(self, batch, labels):
         self.model.eval()
@@ -149,4 +149,4 @@ class Trainer():
                       torch.max(torch.softmax(output, dim=0)).item())
                 if healthy == labels[0][i]:
                     accuracy += 1
-        return accuracy / batch_size, loss.item()
+        return accuracy / batch_size, loss.item(), outputs

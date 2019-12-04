@@ -6,6 +6,7 @@ from examples.simple.main import modify_labels
 from examples.simple.our_model import Classifier
 from examples.simple.trainer import Trainer, device
 from examples.simple.dataset import CustomDataset
+import numpy as np
 
 path_list = None
 save_path = "/newNAS/Workspaces/DRLGroup/xiangyuliu/EfficientNet-PyTorch/examples/simple/logs/four/3/load locallyFalse-squeezeFalse/300-48-1e-10/run1/param_1700.pt"
@@ -35,12 +36,15 @@ def main(args):
                                               num_workers=2)
     true_len = 0
     total_len = 0
+    output_list = []
     for image_batch, labels in test_loader:
         labels = modify_labels(labels)
-        test_accuracy, _ = trainer.evaluate(image_batch, labels)
+        test_accuracy, _, result = trainer.evaluate(image_batch, labels)
         print("test accuracy:", test_accuracy)
         true_len += test_accuracy * image_batch.shape[0]
         total_len += image_batch.shape[0]
+        output_list.append(torch.softmax(result, dim=0).numpy())
+    np.save("prob.npy", np.concatenate(output_list, axis=0))
     print("final accuracy", true_len / total_len)
 
 
