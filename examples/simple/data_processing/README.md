@@ -99,6 +99,6 @@ You only need to change two arguments to train different models
 eg:
 
 ```shell
-pthon universal_net --model_detail efficientnet-b3 --sort_kinds 2 --image_size 224 --batch_size 64
+python universal_net --model_detail efficientnet-b3 --sort_kinds 2 --image_size 224 --batch_size 64
 ```
 
