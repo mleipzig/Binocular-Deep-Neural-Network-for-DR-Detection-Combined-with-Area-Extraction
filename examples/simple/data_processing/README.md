@@ -88,3 +88,17 @@ python universal_net.py --model_detail resnet18 --image_size 30 --batch_size 64
   ```
 
   If you model_type is binary the model_detail is not needed
+
+# Guide on New Model
+
+You only need to change two arguments to train different models 
+
+- --model_detail (resnet18 or effcientnet-b0(0-7), etc)
+- --sort_kinds(2 or 4 or 5)
+
+eg:
+
+```shell
+pthon universal_net --model_detail efficientnet-b3 --sort_kinds 2 --image_size 224 --batch_size 64
+```
+

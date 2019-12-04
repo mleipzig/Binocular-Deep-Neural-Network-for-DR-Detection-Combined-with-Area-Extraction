@@ -1,4 +1,5 @@
 import torch
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
@@ -8,19 +9,19 @@ class Trainer():
         self.model = model
         self.criteria = torch.nn.CrossEntropyLoss()
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
-        self.model_type = args.model_type
+        self.sort_kinds = args.sort_kinds
+        self.mode_detail = args.model_detail
 
     def train(self, batch, labels):
-        if self.model_type == "binary":
-            return self.train_a_batch_binary(batch, labels)
-        elif self.model_type == "five":
-            return self.train_a_batch_five(batch, labels)
-        elif self.model_type == "four":
-            return self.train_a_batch_four(batch, labels)
-        elif self.model_type == "univ_net":
+        if "effficientnet" not in self.mode_detail:
             return self.train_univ_net(batch, labels)
         else:
-            print("no such model")
+            if self.sort_kinds == 2:
+                return self.train_a_batch_binary(batch, labels)
+            elif self.sort_kinds == 5:
+                return self.train_a_batch_five(batch, labels)
+            elif self.sort_kinds == 4:
+                return self.train_a_batch_four(batch, labels)
 
     def train_a_batch_five(self, batch, labels):
         self.model.train()
@@ -55,17 +56,28 @@ class Trainer():
         self.optimizer.step()
         return loss.item()
 
+
+    def train_univ_net(self, batch, labels):
+        self.model.train()
+        batch = batch.to(device)
+        labels = labels.to(device)
+        outputs = self.model(batch)
+        loss = self.criteria(outputs[:, 0:self.sort_kinds], labels[0])
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+        return loss.item()
+
     def evaluate(self, batch, labels):
-        if self.model_type == "binary":
-            return self.evaluate_binary(batch, labels)
-        elif self.model_type == "five":
-            return self.evaluate_five(batch, labels)
-        elif self.model_type == "four":
-            return self.evaluate_four(batch, labels)
-        elif self.model_type == "univ_net":
+        if "effficientnet" not in self.mode_detail:
             return self.evaluate_univ_net(batch, labels)
         else:
-            print("no such model")
+            if self.sort_kinds == 2:
+                return self.evaluate_binary(batch, labels)
+            elif self.sort_kinds == 5:
+                return self.evaluate_five(batch, labels)
+            elif self.sort_kinds == 4:
+                return self.evaluate_four(batch, labels)
 
     def evaluate_five(self, batch, labels):
         self.model.eval()
@@ -121,17 +133,6 @@ class Trainer():
                     accuracy += 1
         return accuracy / batch_size, loss.item()
 
-    def train_univ_net(self, batch, labels):
-        self.model.train()
-        batch = batch.to(device)
-        labels = labels.to(device)
-        outputs = self.model(batch)
-        loss = self.criteria(outputs, labels[0])
-        self.optimizer.zero_grad()
-        loss.backward()
-        self.optimizer.step()
-        return loss.item()
-
     def evaluate_univ_net(self, batch, labels):
         self.model.eval()
         batch = batch.to(device)
@@ -142,7 +143,7 @@ class Trainer():
             outputs = self.model(batch)
             loss = self.criteria(outputs, labels[0])
             for i in range(batch_size):
-                output = outputs[i][0:4]
+                output = outputs[i][0:self.sort_kinds]
                 healthy = torch.argmax(output)
                 print(" label:", labels[0][i].item(), " predict:", healthy.item(), " prob:",
                       torch.max(torch.softmax(output, dim=0)).item())

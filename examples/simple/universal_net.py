@@ -3,6 +3,7 @@ import torch
 import torchvision
 
 from examples.simple.main import adjust_learning_rate
+from examples.simple.our_model import Classifier
 from examples.simple.trainer import Trainer, device
 from tensorboardX import SummaryWriter
 from examples.simple.dataset import CustomDataset, path_list
@@ -20,9 +21,8 @@ def modify_labels(labels):
     return torch.tensor(labels, dtype=torch.long)
 
 
-
 def main(args):
-    model_dir = Path('./univ_net') / args.model_detail / (
+    model_dir = Path('./comprehensive_model') / args.model_detail / str(args.sort_kinds) / (
             str(args.image_size) + "-" + str(args.batch_size) + "-" + str(args.final_lr))
     if not model_dir.exists():
         run_num = 1
@@ -49,13 +49,13 @@ def main(args):
                   "densenet201": torchvision.models.densenet201(pretrained=args.pretrain),
                   "wide_resnet50_2": torchvision.models.wide_resnet50_2(pretrained=args.pretrain),
                   "wide_resnet101_2": torchvision.models.wide_resnet101_2(pretrained=args.pretrain)}
-    classifier = model_dict[args.model_detail].to(device)
+    if "efficientnet" in args.model_detail:
+        classifier = Classifier(args).to(device)
+    else:
+        classifier = model_dict[args.model_detail].to(device)
     print(classifier)
-    # if args.load_local:
-    #     classifier.load_state_dict(torch.load(save_path))
-    #     args.lr = args.final_lr
     trainer = Trainer(classifier, args)
-    train_data = CustomDataset(path_list, img_size=args.image_size, model_type=args.model_type)
+    train_data = CustomDataset(path_list, img_size=args.image_size, sort_kinds=args.sort_kinds, test=False)
     train_data.test_label = modify_labels(train_data.test_label)
     train_loader = torch.utils.data.DataLoader(dataset=train_data, batch_size=args.batch_size, shuffle=True,
                                                num_workers=2)
@@ -98,8 +98,9 @@ if __name__ == '__main__':
     parser.add_argument("--save_freq", default=100, type=int)
     parser.add_argument("--load_local", default=False, action="store_true")
     parser.add_argument("--pretrain", default=False, action="store_true")
+
     parser.add_argument("--image_size", default=300, type=int)
-    parser.add_argument("--model_type", default="univ_net", type=str)
+    parser.add_argument("--sort_kinds", default=4, type=int)
     parser.add_argument("--model_detail", default="resnet18", type=str)
     args = parser.parse_args()
     main(args)

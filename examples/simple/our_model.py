@@ -8,7 +8,7 @@ class Classifier(torch.nn.Module):
     def __init__(self, args):
         super(Classifier, self).__init__()
         self.squeeze = args.squeeze
-        self.model = EfficientNet.from_pretrained('efficientnet-b' + str(args.model_scale), num_classes=5)
+        self.model = EfficientNet.from_pretrained(args.model_detail, num_classes=5)
         if self.squeeze:
             for param in self.model.parameters():
                 param.requires_grad = False

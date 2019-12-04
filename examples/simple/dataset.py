@@ -7,14 +7,14 @@ from examples.simple.main import path_list
 
 
 class CustomDataset(torch.utils.data.Dataset):
-    def __init__(self, path_list, img_size=300, model_type="binary", test=False):
+    def __init__(self, path_list, img_size=300, sort_kinds=4, test=False):
         self.data = []
         self.len_array = []
         self.img_size = img_size
         self.path_list = path_list
-        self.kinds = 5 if model_type == "binary" else 4
+        self.sort_kinds = sort_kinds
         self.test = test
-        if self.kinds == 4:
+        if self.sort_kinds == 4:
             self.path_list = self.path_list[1:]
         for path, i in zip(path_list, range(len(self.path_list))):
             self.data.append(np.load(path, mmap_mode="r"))
