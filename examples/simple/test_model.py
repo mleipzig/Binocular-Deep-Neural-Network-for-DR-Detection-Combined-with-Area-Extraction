@@ -43,7 +43,7 @@ def main(args):
         print("test accuracy:", test_accuracy)
         true_len += test_accuracy * image_batch.shape[0]
         total_len += image_batch.shape[0]
-        output_list.append(torch.softmax(result, dim=0).numpy())
+        output_list.append(torch.softmax(result, dim=1).numpy())
     np.save("prob.npy", np.concatenate(output_list, axis=0))
     print("final accuracy", true_len / total_len)
 
