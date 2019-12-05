@@ -107,7 +107,7 @@ class Trainer():
             outputs = self.model(batch)
             loss = self.criteria(outputs[:, 5:7], labels[1])
             for i in range(batch_size):
-                output = outputs[i][5:]
+                output = outputs[i][5:7]
                 healthy = torch.argmax(output)
                 print(" label:", labels[1][i].item(), " predict:", healthy.item(), " prob:",
                       torch.max(torch.softmax(output, dim=0)).item())
@@ -125,7 +125,7 @@ class Trainer():
             outputs = self.model(batch)
             loss = self.criteria(outputs[:, 7:], labels[0])
             for i in range(batch_size):
-                output = outputs[i][0:4]
+                output = outputs[i][7:]
                 healthy = torch.argmax(output)
                 print(" label:", labels[0][i].item(), " predict:", healthy.item(), " prob:",
                       torch.max(torch.softmax(output, dim=0)).item())
