@@ -149,4 +149,4 @@ class Trainer():
                       torch.max(torch.softmax(output, dim=0)).item())
                 if healthy == labels[0][i]:
                     accuracy += 1
-        return accuracy / batch_size, loss.item(), outputs
+        return accuracy / batch_size, loss.item(), outputs[0:self.sort_kinds]
