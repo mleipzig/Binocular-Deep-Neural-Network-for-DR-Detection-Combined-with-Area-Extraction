@@ -141,7 +141,7 @@ class Trainer():
         accuracy = 0
         with torch.no_grad():
             outputs = self.model(batch)
-            loss = self.criteria(outputs, labels[0])
+            loss = self.criteria(outputs[:, 0:self.sort_kinds], labels[0])
             for i in range(batch_size):
                 output = outputs[i][0:self.sort_kinds]
                 healthy = torch.argmax(output)
