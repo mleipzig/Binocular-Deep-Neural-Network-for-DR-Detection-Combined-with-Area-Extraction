@@ -56,7 +56,6 @@ class Trainer():
         self.optimizer.step()
         return loss.item()
 
-
     def train_univ_net(self, batch, labels):
         self.model.train()
         batch = batch.to(device)
@@ -149,4 +148,4 @@ class Trainer():
                       torch.max(torch.softmax(output, dim=0)).item())
                 if healthy == labels[0][i]:
                     accuracy += 1
-        return accuracy / batch_size, loss.item(), outputs[0:self.sort_kinds]
+        return accuracy / batch_size, loss.item(), outputs[:, 0:self.sort_kinds]
