@@ -2,6 +2,40 @@ import torch
 from torch import nn
 import efficientnet_pytorch
 from efficientnet_pytorch import EfficientNet
+import math
+
+
+def GetSpecificArea(model, images):
+    location = model(images)
+    row, column = images[0].shape(0), images.shape(1)
+    area_list = []
+    for i in range(images.shape[0]):
+        image = images[i]
+        center_x, center_y = location[i, 0], location[i, 1]
+        left_x, right_x = (center_x - 0.1) * row, (center_x + 0.1) * row
+        low_y, high_y = (center_y - 0.1) * column, (center_y + 0.1) * column
+        area_list.append(image[math.floor(left_x):math.floor(right_x), math.floor(low_y):math.floor(high_y)])
+    return area_list
+
+
+class ExtractMacula(torch.nn.Module):
+    def __init__(self):
+        super(ExtractMacula, self).__init__()
+        self.sigmoid = nn.Sigmoid()
+        self.model = EfficientNet.from_pretrained("efficientnet-b3", num_classes=2)
+
+    def forward(self, inputs):
+        return self.sigmoid(self.model.forward(input))
+
+
+class ExtractOptic(torch.nn.Module):
+    def __init__(self):
+        super(ExtractOptic, self).__init__()
+        self.sigmoid = nn.Sigmoid()
+        self.model = EfficientNet.from_pretrained("efficientnet-b3", num_classes=2)
+
+    def forward(self, inputs):
+        return self.sigmoid(self.model.forward(inputs))
 
 
 class Classifier(torch.nn.Module):
@@ -46,6 +80,7 @@ class Classifier(torch.nn.Module):
 
     def save(self, path):
         torch.save(self.state_dict(), path)
+
 
 def conv3x3(in_channels, out_channels, stride=1):
     return nn.Conv2d(in_channels, out_channels, kernel_size=3,
