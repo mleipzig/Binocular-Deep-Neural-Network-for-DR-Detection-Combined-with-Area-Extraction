@@ -1,7 +1,6 @@
 import argparse
 import torch
 import torchvision
-
 from examples.simple.main import adjust_learning_rate, path_list
 from examples.simple.our_model import Classifier
 from examples.simple.trainer import Trainer, device

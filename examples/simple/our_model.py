@@ -43,10 +43,15 @@ class Classifier(torch.nn.Module):
         super(Classifier, self).__init__()
         self.squeeze = args.squeeze
         self.model = EfficientNet.from_pretrained(args.model_detail, num_classes=5)
+        self.model_for_macula = EfficientNet.from_pretrained("effcientnet-b3", num_classes=5)
+        self.model_for_optic = EfficientNet.from_pretrained("effcientnet-b3", num_classes=5)
         if self.squeeze:
             for param in self.model.parameters():
                 param.requires_grad = False
-        out_channels = efficientnet_pytorch.utils.round_filters(1280, self.model._global_params)
+        out_channels = efficientnet_pytorch.utils.round_filters(1280,
+                                                                self.model._global_params) + efficientnet_pytorch.utils.round_filters(
+            1280, self.model_for_macula._global_params) + efficientnet_pytorch.utils.round_filters(1280,
+                                                                                                   self.model_for_optic._global_params)
         self._avg_pooling_1 = torch.nn.AdaptiveAvgPool2d(1)
         self._dropout_1 = torch.nn.Dropout(self.model._global_params.dropout_rate)
         self._fc_1 = torch.nn.Linear(out_channels, 5)
@@ -57,9 +62,12 @@ class Classifier(torch.nn.Module):
         self._dropout_3 = torch.nn.Dropout(self.model._global_params.dropout_rate)
         self._fc_3 = torch.nn.Linear(out_channels, 4)
 
-    def forward(self, inputs):
+    def forward(self, inputs, inputs_macular, inputs_optic):
         bs = inputs.size(0)
         x = self.model.extract_features(inputs)
+        x_macular = self.model_for_macula.extract_features(inputs_macular)
+        x_optic = self.model_for_optic.extract_features(inputs_optic)
+        x = torch.cat((x, x_macular, x_optic), dim=-1)
         x_1 = self._avg_pooling_1(x)
         x_1 = x_1.view(bs, -1)
         x_1 = self._dropout_1(x_1)
