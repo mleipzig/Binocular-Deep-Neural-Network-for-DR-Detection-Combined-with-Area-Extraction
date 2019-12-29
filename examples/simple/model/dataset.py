@@ -5,6 +5,9 @@ from PIL import Image
 
 
 class CustomDataset(torch.utils.data.Dataset):
+    '''
+    custom dataset to load the images locally
+    '''
     def __init__(self, path_list, img_size=300, sort_kinds=4, test=False):
         self.data = []
         self.len_array = []

@@ -1,11 +1,14 @@
+'''
+In this file we implement a rather simple resnet
+'''
 import argparse
 import torch
 
-from examples.simple.main import path_list, adjust_learning_rate
-from examples.simple.our_model import ResNet
-from examples.simple.trainer import Trainer, device
+from examples.simple.model.main import path_list, adjust_learning_rate
+from examples.simple.model.our_model import ResNet
+from examples.simple.model.trainer import Trainer, device
 from tensorboardX import SummaryWriter
-from examples.simple.dataset import CustomDataset
+from examples.simple.model.dataset import CustomDataset
 import numpy as np
 from pathlib import Path
 import os

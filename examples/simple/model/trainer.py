@@ -1,3 +1,6 @@
+'''
+This file contains the core implement of the training procedure of our model and baselines
+'''
 import torch
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

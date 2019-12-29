@@ -130,29 +130,82 @@ def CLAHE(img):
     return img
 
 
+def new_data_augmentation(img):
+    #img = crop_and_Gaussian(None,0,img,15,im_size1,im_size2)
+    #img = CLAHE(img)
+    im = Image.fromarray(np.uint8(img))
+    img2 = im.rotate(90)
+    img3 = im.rotate(180)
+    img4 = im.rotate(270)
+    img2 = np.asarray(img2)
+    #img2 = rotate(img, angle=90)*256
+    #print("img2----------------",img2.max())
+    img3 = np.asarray(img3)
+    img4 = np.asarray(img4)
+    img5 = np.fliplr(img)
+    img6 = np.flipud(img)
+    img7 = np.fliplr(img2)
+    img8 = np.flipud(img2)
+    img9 = np.fliplr(img3)
+    img10 = np.flipud(img3)
+    img11 = np.fliplr(img4)
+    img12 = np.flipud(img4)
+    img = img.reshape((1,) + img.shape).astype('uint8')
+    img2 = img2.reshape((1,) + img2.shape)
+    img3 = img3.reshape((1,) + img3.shape)
+    img4 = img4.reshape((1,) + img4.shape)
+    img5 = img5.reshape((1,) + img5.shape)
+    img6 = img6.reshape((1,) + img6.shape)
+    img7 = img7.reshape((1,) + img7.shape)
+    img8 = img8.reshape((1,) + img8.shape)
+    img9 = img9.reshape((1,) + img9.shape)
+    img10 = img10.reshape((1,) + img10.shape)
+    img11 = img11.reshape((1,) + img11.shape)
+    img12 = img12.reshape((1,) + img12.shape)
+    #print(img.shape,img2.shape,img3.shape,img4.shape,img5.shape,img6.shape)
+    img = np.concatenate((img,img2,img3,img4,img5,img6,img7,img8,img9,img10,img11,img12)).astype('uint8')
+    #print("IMG0:----------------",img[0],"IMG1:-----------------------",img[1])
+    return img
 
-
-def create_npy(df_train,im_size1,im_size2):
+def create_npy(df_train,df_train2,im_size1,im_size2):
     targets_series = pd.Series(df_train['level'])
-    one_hot = pd.get_dummies(targets_series,sparse=True)
-    one_hot_labels = np.asarray(one_hot)
-    print(one_hot_labels.shape)
+    targets_series2 = pd.Series(df_train2['level'])
+    #one_hot = pd.get_dummies(targets_series,sparse=True)
+    #one_hot_labels = np.asarray(one_hot)
+    #print(one_hot_labels.shape)
     x_train=[]
     y_train=[]
     for i in trange(df_train.values.shape[0]):
+        if (targets_series[i]==4):
             #img = cv2.imread('C:/Users/User/Desktop/Digital Image Processing/project/images/39_left')
             path = 'C:/Users/User/Desktop/Digital Image Processing/project/images/'+df_train.values[i][1].split('/')[len(df_train.values[i][1].split('/'))-1].split('.')[0]
             #print(path)
             img = cv2.imdecode(np.fromfile(path,dtype=np.uint8),cv2.IMREAD_UNCHANGED)
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             #img = crop_and_Gaussian(path,20)
             #print(img.shape)
-            img=CLAHE(img)
-            label = one_hot_labels[i]
-            x_train.append(cv2.resize(img, (im_size1, im_size2)))
-            y_train.append(label)
+            img=new_data_augmentation(img)
+            #print(img.shape)
+            for j in range(img.shape[0]):
+                x_train.append(img[j])
+            #x_train.append(img)
+            #label = one_hot_labels[i]
 
-    np.save('x_clahe',x_train)
-    np.save('y_clahe',y_train)
+    #kaggle数据
+    for i in trange(df_train2.values.shape[0]):
+        if (targets_series2[i]==4):
+            #img = cv2.imread('C:/Users/User/Desktop/Digital Image Processing/project/images/39_left')
+            path = 'G:/DIP/image_kaggle/'+df_train2.values[i][0]+'.jpeg'
+            #print(path)
+            img = cv2.imdecode(np.fromfile(path,dtype=np.uint8),cv2.IMREAD_UNCHANGED)
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            img=new_data_augmentation(img)
+            for j in range(img.shape[0]):
+                x_train.append(img[j])
+            #label = one_hot_labels[i]
+
+    np.save('G:\\DIP\\NEW\\origin\\x_4',x_train)
+    #np.save('y_clahe',y_train)
     print('Done')
 
 def show(df_train):
@@ -232,28 +285,20 @@ def datagen(x,y):
     print("save done")
 
 #df_train = pd.read_excel('C:\\Users\\User\\Desktop\\Digital Image Processing\\project\\label.xlsx')
-
+#df_train2 = pd.read_excel('G:\\DIP\\image_kaggle\\trainLabels.xlsx')
 scale=300
-#x_mean,y_mean,x_var,y_var,origin_x_mean,origin_y_mean=count_average_dimension(df_train,scale)
-#print(x_mean,y_mean,x_var,y_var,origin_x_mean,origin_y_mean)
-#im_size1=int(x_mean)
-#im_size2=int(y_mean)
-im_size1=579
-im_size2=697
+
+im_size1=512
+im_size2=512
 
 #show(df_train)
 #create_npy(df_train,im_size1,im_size2)
 
-x=np.load('x_rotate4_2000.npy')
-y=np.load('y_rotate4_2000.npy')
-
-
-
 
 '''
-0: 6449
-1: 852
-2: 1216
-3: 212
-4: 131
+0: 6449+25810=32259 
+1: 852+2443=3295  *4 = 13180
+2: 1216+5292=6508 *2 = 13016
+3: 212+873=1085 *12 = 13020
+4: 131+708=839  *12 = 10068
 '''

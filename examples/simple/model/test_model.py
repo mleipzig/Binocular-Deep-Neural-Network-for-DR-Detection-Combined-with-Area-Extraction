@@ -1,11 +1,14 @@
+'''
+In this file we manually load the model we have trained and test performance of our model and baselines
+'''
 import argparse
 import torch
 import torchvision
 
-from examples.simple.main import modify_labels
-from examples.simple.our_model import Classifier
-from examples.simple.trainer import Trainer, device
-from examples.simple.dataset import CustomDataset
+from examples.simple.model.main import modify_labels
+from examples.simple.model.our_model import Classifier
+from examples.simple.model.trainer import Trainer, device
+from examples.simple.model.dataset import CustomDataset
 import numpy as np
 
 path_list = None
@@ -23,7 +26,8 @@ def main(args):
                   "densenet169": torchvision.models.densenet169(pretrained=args.pretrain),
                   "densenet201": torchvision.models.densenet201(pretrained=args.pretrain),
                   "wide_resnet50_2": torchvision.models.wide_resnet50_2(pretrained=args.pretrain),
-                  "wide_resnet101_2": torchvision.models.wide_resnet101_2(pretrained=args.pretrain)}
+                  "wide_resnet101_2": torchvision.models.wide_resnet101_2(pretrained=args.pretrain),
+                  "resnext101_32*8d":torchvision.models.resnext101_32x8d(pretrained=args.pretrain)}
 
     if "efficientnet" in args.model_detail:
         classifier = Classifier(args).to(device)

@@ -1,3 +1,6 @@
+'''
+This file contains the core implement of our model and resnet
+'''
 import torch
 from torch import nn
 import efficientnet_pytorch
@@ -6,6 +9,11 @@ import math
 
 
 def GetSpecificArea(model, images):
+    '''
+    :param model: the model for macular extraction or optic extraction
+    :param images: the batch of images
+    :return: the corresponding areas
+    '''
     location = model(images)
     row, column = images[0].shape(0), images.shape(1)
     area_list = []
@@ -19,6 +27,9 @@ def GetSpecificArea(model, images):
 
 
 class ExtractMacula(torch.nn.Module):
+    '''
+    model for extracting macular areas
+    '''
     def __init__(self):
         super(ExtractMacula, self).__init__()
         self.sigmoid = nn.Sigmoid()
@@ -29,6 +40,10 @@ class ExtractMacula(torch.nn.Module):
 
 
 class ExtractOptic(torch.nn.Module):
+    '''
+    model for extracting the optic area
+    '''
+
     def __init__(self):
         super(ExtractOptic, self).__init__()
         self.sigmoid = nn.Sigmoid()
@@ -39,12 +54,17 @@ class ExtractOptic(torch.nn.Module):
 
 
 class Classifier(torch.nn.Module):
-    def __init__(self, args):
+    '''
+    model for deep binocular neural network combined with area extraction
+    '''
+    def __init__(self, args, model_extract_macular, model_extract_optic):
         super(Classifier, self).__init__()
         self.squeeze = args.squeeze
         self.model = EfficientNet.from_pretrained(args.model_detail, num_classes=5)
         self.model_for_macula = EfficientNet.from_pretrained("effcientnet-b3", num_classes=5)
         self.model_for_optic = EfficientNet.from_pretrained("effcientnet-b3", num_classes=5)
+        self.model_extract_macular = model_extract_macular
+        self.model_extract_optic = model_extract_optic
         if self.squeeze:
             for param in self.model.parameters():
                 param.requires_grad = False
@@ -62,29 +82,38 @@ class Classifier(torch.nn.Module):
         self._dropout_3 = torch.nn.Dropout(self.model._global_params.dropout_rate)
         self._fc_3 = torch.nn.Linear(out_channels, 4)
 
-    def forward(self, inputs, inputs_macular, inputs_optic):
-        bs = inputs.size(0)
-        x = self.model.extract_features(inputs)
-        x_macular = self.model_for_macula.extract_features(inputs_macular)
-        x_optic = self.model_for_optic.extract_features(inputs_optic)
-        x = torch.cat((x, x_macular, x_optic), dim=-1)
-        x_1 = self._avg_pooling_1(x)
-        x_1 = x_1.view(bs, -1)
-        x_1 = self._dropout_1(x_1)
-        x_1 = self._fc_1(x_1)
+    def forward(self, inputs_eyes):
+        # iterate over the left eyes and the right eyes
+        features_list = []
+        for inputs in inputs_eyes:
+            bs = inputs.size(0)
+            x = self.model.extract_features(inputs)
+            # extract areas and features of the macular area
+            inputs_macular = GetSpecificArea(self.model_extract_macular, inputs)
+            x_macular = self.model_for_macula.extract_features(inputs_macular)
+            # extract areas and features for optic areas
+            inputs_optic = GetSpecificArea(self.model_extract_optic, inputs)
+            x_optic = self.model_for_optic.extract_features(inputs_optic)
+            # concat all the features
+            x = torch.cat((x, x_macular, x_optic), dim=-1)
+            x_1 = self._avg_pooling_1(x)
+            x_1 = x_1.view(bs, -1)
+            x_1 = self._dropout_1(x_1)
+            x_1 = self._fc_1(x_1)
+            features_list.append(x_1)
 
-        x_2 = self._avg_pooling_2(x)
-        x_2 = x_2.view(bs, -1)
-        x_2 = self._dropout_2(x_2)
-        x_2 = self._fc_2(x_2)
-
-        x_3 = self._avg_pooling_3(x)
-        x_3 = x_3.view(bs, -1)
-        x_3 = self._dropout_3(x_3)
-        x_3 = self._fc_3(x_3)
-
-        x = torch.cat((x_1, x_2, x_3), dim=-1)
-        return x
+        # x_2 = self._avg_pooling_2(x)
+        # x_2 = x_2.view(bs, -1)
+        # x_2 = self._dropout_2(x_2)
+        # x_2 = self._fc_2(x_2)
+        #
+        # x_3 = self._avg_pooling_3(x)
+        # x_3 = x_3.view(bs, -1)
+        # x_3 = self._dropout_3(x_3)
+        # x_3 = self._fc_3(x_3)
+        #
+        # x = torch.cat((x_1, x_2, x_3), dim=-1)
+        return torch.cat(features_list, dim=-1)
 
     def save(self, path):
         torch.save(self.state_dict(), path)
